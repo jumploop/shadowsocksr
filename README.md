@@ -22,7 +22,9 @@ https://github.com/ToyoDAdoubiBackup/shadowsocksr
 
 https://github.com/ToyoDAdoubi/doubi
 
-加速等功能：https://github.com/jinwyp/one_click_script
+加速等功能：
+
+https://github.com/jinwyp/one_click_script
 
 Server
 ------
