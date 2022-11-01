@@ -5,6 +5,19 @@ ShadowsocksR
 
 A fast tunnel proxy that helps you bypass firewalls.
 
+！！！
+------
+修改自：
+
+https://github.com/ToyoDAdoubiBackup/shadowsocksr
+
+https://github.com/ToyoDAdoubi/doubi
+
+把自己需要的放到了一起，删除了自己用不到的一些东西。可能无法运行，请勿使用。
+
+    wget -N --no-check-certificate https://raw.githubusercontent.com/ymkf/shadowsocksr/main/ssr.sh && chmod +x ssr.sh && bash ssr.sh
+
+
 Server
 ------
 
