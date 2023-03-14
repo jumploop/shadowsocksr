@@ -99,8 +99,7 @@ def build_address(address):
         l = len(label)
         if l > 63:
             return None
-        results.append(common.chr(l))
-        results.append(label)
+        results.extend((common.chr(l), label))
     results.append(b'\0')
     return b''.join(results)
 
@@ -214,20 +213,20 @@ def parse_response(data):
             qds = []
             ans = []
             offset = 12
-            for i in range(0, res_qdcount):
+            for _ in range(res_qdcount):
                 l, r = parse_record(data, offset, True)
                 offset += l
                 if r:
                     qds.append(r)
-            for i in range(0, res_ancount):
+            for _ in range(res_ancount):
                 l, r = parse_record(data, offset)
                 offset += l
                 if r:
                     ans.append(r)
-            for i in range(0, res_nscount):
+            for _ in range(res_nscount):
                 l, r = parse_record(data, offset)
                 offset += l
-            for i in range(0, res_arcount):
+            for _ in range(res_arcount):
                 l, r = parse_record(data, offset)
                 offset += l
             response = DNSResponse()
@@ -258,7 +257,7 @@ class DNSResponse(object):
         self.answers = []  # each: (addr, type, class)
 
     def __str__(self):
-        return '%s: %s' % (self.hostname, str(self.answers))
+        return f'{self.hostname}: {str(self.answers)}'
 
 
 STATUS_IPV4 = 0
@@ -287,15 +286,10 @@ class DNSResolver(object):
             with open('dns.conf', 'rb') as f:
                 content = f.readlines()
                 for line in content:
-                    line = line.strip()
-                    if line:
+                    if line := line.strip():
                         parts = line.split(b' ', 1)
-                        if len(parts) >= 2:
-                            server = parts[0]
-                            port = int(parts[1])
-                        else:
-                            server = parts[0]
-                            port = 53
+                        port = int(parts[1]) if len(parts) >= 2 else 53
+                        server = parts[0]
                         if common.is_ip(server) == socket.AF_INET:
                             if type(server) != str:
                                 server = server.decode('utf8')
@@ -307,8 +301,7 @@ class DNSResolver(object):
                 with open('/etc/resolv.conf', 'rb') as f:
                     content = f.readlines()
                     for line in content:
-                        line = line.strip()
-                        if line:
+                        if line := line.strip():
                             if line.startswith(b'nameserver'):
                                 parts = line.split()
                                 if len(parts) >= 2:
@@ -321,7 +314,7 @@ class DNSResolver(object):
                 pass
         if not self._servers:
             self._servers = [('8.8.4.4', 53), ('8.8.8.8', 53)]
-        logging.info('dns server: %s' % (self._servers,))
+        logging.info(f'dns server: {self._servers}')
 
     def _parse_hosts(self):
         etc_path = '/etc/hosts'
@@ -329,7 +322,7 @@ class DNSResolver(object):
             etc_path = os.environ['WINDIR'] + '/system32/drivers/etc/hosts'
         try:
             with open(etc_path, 'rb') as f:
-                for line in f.readlines():
+                for line in f:
                     line = line.strip()
                     if b"#" in line:
                         line = line[:line.find(b'#')]
@@ -338,8 +331,7 @@ class DNSResolver(object):
                         ip = parts[0]
                         if common.is_ip(ip):
                             for i in range(1, len(parts)):
-                                hostname = parts[i]
-                                if hostname:
+                                if hostname := parts[i]:
                                     self._hosts[hostname] = ip
         except IOError:
             self._hosts['localhost'] = '127.0.0.1'
@@ -363,8 +355,7 @@ class DNSResolver(object):
             if ip or error:
                 callback((hostname, ip), error)
             else:
-                callback((hostname, None),
-                         Exception('unable to parse hostname %s' % hostname))
+                callback((hostname, None), Exception(f'unable to parse hostname {hostname}'))
         if hostname in self._hostname_to_cb:
             del self._hostname_to_cb[hostname]
         if hostname in self._hostname_status:
@@ -374,40 +365,40 @@ class DNSResolver(object):
         response = parse_response(data)
         if response and response.hostname:
             hostname = response.hostname
-            ip = None
-            for answer in response.answers:
-                if answer[1] in (QTYPE_A, QTYPE_AAAA) and \
-                        answer[2] == QCLASS_IN:
-                    ip = answer[0]
-                    break
+            ip = next(
+                (
+                    answer[0]
+                    for answer in response.answers
+                    if answer[1] in (QTYPE_A, QTYPE_AAAA)
+                    and answer[2] == QCLASS_IN
+                ),
+                None,
+            )
             if IPV6_CONNECTION_SUPPORT:
                 if not ip and self._hostname_status.get(hostname, STATUS_IPV4) \
-                        == STATUS_IPV6:
+                            == STATUS_IPV6:
                     self._hostname_status[hostname] = STATUS_IPV4
                     self._send_req(hostname, QTYPE_A)
-                else:
-                    if ip:
-                        self._cache[hostname] = ip
-                        self._call_callback(hostname, ip)
-                    elif self._hostname_status.get(hostname, None) == STATUS_IPV4:
-                        for question in response.questions:
-                            if question[1] == QTYPE_A:
-                                self._call_callback(hostname, None)
-                                break
-            else:
-                if not ip and self._hostname_status.get(hostname, STATUS_IPV6) \
-                        == STATUS_IPV4:
-                    self._hostname_status[hostname] = STATUS_IPV6
-                    self._send_req(hostname, QTYPE_AAAA)
-                else:
-                    if ip:
-                        self._cache[hostname] = ip
-                        self._call_callback(hostname, ip)
-                    elif self._hostname_status.get(hostname, None) == STATUS_IPV6:
-                        for question in response.questions:
-                            if question[1] == QTYPE_AAAA:
-                                self._call_callback(hostname, None)
-                                break
+                elif ip:
+                    self._cache[hostname] = ip
+                    self._call_callback(hostname, ip)
+                elif self._hostname_status.get(hostname, None) == STATUS_IPV4:
+                    for question in response.questions:
+                        if question[1] == QTYPE_A:
+                            self._call_callback(hostname, None)
+                            break
+            elif not ip and self._hostname_status.get(hostname, STATUS_IPV6) \
+                            == STATUS_IPV4:
+                self._hostname_status[hostname] = STATUS_IPV6
+                self._send_req(hostname, QTYPE_AAAA)
+            elif ip:
+                self._cache[hostname] = ip
+                self._call_callback(hostname, ip)
+            elif self._hostname_status.get(hostname, None) == STATUS_IPV6:
+                for question in response.questions:
+                    if question[1] == QTYPE_AAAA:
+                        self._call_callback(hostname, None)
+                        break
 
     def handle_event(self, sock, fd, event):
         if sock != self._sock:
@@ -432,11 +423,9 @@ class DNSResolver(object):
         self._cache.sweep()
 
     def remove_callback(self, callback):
-        hostname = self._cb_to_hostname.get(callback)
-        if hostname:
+        if hostname := self._cb_to_hostname.get(callback):
             del self._cb_to_hostname[callback]
-            arr = self._hostname_to_cb.get(hostname, None)
-            if arr:
+            if arr := self._hostname_to_cb.get(hostname, None):
                 arr.remove(callback)
                 if not arr:
                     del self._hostname_to_cb[hostname]
@@ -467,19 +456,17 @@ class DNSResolver(object):
             callback((hostname, ip), None)
         else:
             if not is_valid_hostname(hostname):
-                callback(None, Exception('invalid hostname: %s' % hostname))
+                callback(None, Exception(f'invalid hostname: {hostname}'))
                 return
-            if False:
-                addrs = socket.getaddrinfo(hostname, 0, 0,
-                                       socket.SOCK_DGRAM, socket.SOL_UDP)
-                if addrs:
-                    af, socktype, proto, canonname, sa = addrs[0]
-                    logging.debug('DNS resolve %s %s' % (hostname, sa[0]) )
-                    self._cache[hostname] = sa[0]
-                    callback((hostname, sa[0]), None)
-                    return
-            arr = self._hostname_to_cb.get(hostname, None)
-            if not arr:
+            if arr := self._hostname_to_cb.get(hostname, None):
+                arr.append(callback)
+                # TODO send again only if waited too long
+                if IPV6_CONNECTION_SUPPORT:
+                    self._send_req(hostname, QTYPE_AAAA)
+                else:
+                    self._send_req(hostname, QTYPE_A)
+
+            else:
                 if IPV6_CONNECTION_SUPPORT:
                     self._hostname_status[hostname] = STATUS_IPV6
                     self._send_req(hostname, QTYPE_AAAA)
@@ -488,13 +475,6 @@ class DNSResolver(object):
                     self._send_req(hostname, QTYPE_A)
                 self._hostname_to_cb[hostname] = [callback]
                 self._cb_to_hostname[callback] = hostname
-            else:
-                arr.append(callback)
-                # TODO send again only if waited too long
-                if IPV6_CONNECTION_SUPPORT:
-                    self._send_req(hostname, QTYPE_AAAA)
-                else:
-                    self._send_req(hostname, QTYPE_A)
 
     def close(self):
         if self._sock:

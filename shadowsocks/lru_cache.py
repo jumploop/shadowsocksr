@@ -91,9 +91,7 @@ class LRUCache(collections.MutableMapping):
         # O(n - m)
         now = time.time()
         c = 0
-        while c < sweep_item_cnt:
-            if len(self._keys_to_last_time) == 0:
-                break
+        while c < sweep_item_cnt and len(self._keys_to_last_time) != 0:
             for key in self._keys_to_last_time:
                 break
             last_t = self._keys_to_last_time[key]
@@ -112,9 +110,10 @@ class LRUCache(collections.MutableMapping):
     def clear(self, keep):
         now = time.time()
         c = 0
-        while len(self._keys_to_last_time) > keep:
-            if len(self._keys_to_last_time) == 0:
-                break
+        while (
+            len(self._keys_to_last_time) > keep
+            and len(self._keys_to_last_time) != 0
+        ):
             for key in self._keys_to_last_time:
                 break
             last_t = self._keys_to_last_time[key]

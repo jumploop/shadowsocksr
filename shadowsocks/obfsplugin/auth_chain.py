@@ -77,14 +77,11 @@ class xorshift128plus(object):
         self.v0 = struct.unpack('<Q', bin[:8])[0]
         self.v1 = struct.unpack('<Q', bin[8:16])[0]
 
-        for i in range(4):
+        for _ in range(4):
             self.next()
 
 def match_begin(str1, str2):
-    if len(str1) >= len(str2):
-        if str1[:len(str2)] == str2:
-            return True
-    return False
+    return len(str1) >= len(str2) and str1[:len(str2)] == str2
 
 class auth_base(plain.plain):
     def __init__(self, method):
@@ -200,28 +197,30 @@ class obfs_auth_chain_data(object):
             self.user_id[user_id] = lru_cache.LRUCache()
         local_client_id = self.user_id[user_id]
 
-        if local_client_id.get(client_id, None) is None or not local_client_id[client_id].enable:
-            if local_client_id.first() is None or len(local_client_id) < self.max_client:
-                if client_id not in local_client_id:
-                    #TODO: check
-                    local_client_id[client_id] = client_queue(connection_id)
-                else:
-                    local_client_id[client_id].re_enable(connection_id)
-                return local_client_id[client_id].insert(connection_id)
-
-            if not local_client_id[local_client_id.first()].is_active():
-                del local_client_id[local_client_id.first()]
-                if client_id not in local_client_id:
-                    #TODO: check
-                    local_client_id[client_id] = client_queue(connection_id)
-                else:
-                    local_client_id[client_id].re_enable(connection_id)
-                return local_client_id[client_id].insert(connection_id)
-
-            logging.warn(self.name + ': no inactive client')
-            return False
-        else:
+        if (
+            local_client_id.get(client_id, None) is not None
+            and local_client_id[client_id].enable
+        ):
             return local_client_id[client_id].insert(connection_id)
+        if local_client_id.first() is None or len(local_client_id) < self.max_client:
+            if client_id not in local_client_id:
+                #TODO: check
+                local_client_id[client_id] = client_queue(connection_id)
+            else:
+                local_client_id[client_id].re_enable(connection_id)
+            return local_client_id[client_id].insert(connection_id)
+
+        if not local_client_id[local_client_id.first()].is_active():
+            del local_client_id[local_client_id.first()]
+            if client_id not in local_client_id:
+                #TODO: check
+                local_client_id[client_id] = client_queue(connection_id)
+            else:
+                local_client_id[client_id].re_enable(connection_id)
+            return local_client_id[client_id].insert(connection_id)
+
+        logging.warn(f'{self.name}: no inactive client')
+        return False
 
     def remove(self, user_id, client_id):
         if user_id in self.user_id:
@@ -289,18 +288,14 @@ class auth_chain_a(auth_base):
             return random.next() % 31
         if buf_size > 900:
             return random.next() % 127
-        if buf_size > 400:
-            return random.next() % 521
-        return random.next() % 1021
+        return random.next() % 521 if buf_size > 400 else random.next() % 1021
 
     def udp_rnd_data_len(self, last_hash, random):
         random.init_from_bin(last_hash)
         return random.next() % 127
 
     def rnd_start_pos(self, rand_len, random):
-        if rand_len > 0:
-            return random.next() % 8589934609 % rand_len
-        return 0
+        return random.next() % 8589934609 % rand_len if rand_len > 0 else 0
 
     def rnd_data(self, buf_size, buf, last_hash, random):
         rand_len = self.rnd_data_len(buf_size, last_hash, random)
@@ -309,12 +304,11 @@ class auth_chain_a(auth_base):
 
         if buf_size == 0:
             return rnd_data_buf
+        if rand_len > 0:
+            start_pos = self.rnd_start_pos(rand_len, random)
+            return rnd_data_buf[:start_pos] + buf + rnd_data_buf[start_pos:]
         else:
-            if rand_len > 0:
-                start_pos = self.rnd_start_pos(rand_len, random)
-                return rnd_data_buf[:start_pos] + buf + rnd_data_buf[start_pos:]
-            else:
-                return buf
+            return buf
 
     def pack_client_data(self, buf):
         buf = self.encryptor.encrypt(buf)
@@ -378,7 +372,9 @@ class auth_chain_a(auth_base):
             self.server_info.data.local_client_id = b''
         if not self.server_info.data.local_client_id:
             self.server_info.data.local_client_id = os.urandom(4)
-            logging.debug("local_client_id %s" % (binascii.hexlify(self.server_info.data.local_client_id),))
+            logging.debug(
+                f"local_client_id {binascii.hexlify(self.server_info.data.local_client_id)}"
+            )
             self.server_info.data.connection_id = struct.unpack('<I', os.urandom(4))[0] & 0xFFFFFF
         self.server_info.data.connection_id += 1
         return b''.join([struct.pack('<I', utc_time),
@@ -420,7 +416,9 @@ class auth_chain_a(auth_base):
 
             server_hash = hmac.new(mac_key, self.recv_buf[:length + 2], self.hashfunc).digest()
             if server_hash[:2] != self.recv_buf[length + 2 : length + 4]:
-                logging.info('%s: checksum error, data %s' % (self.no_compatible_method, binascii.hexlify(self.recv_buf[:length])))
+                logging.info(
+                    f'{self.no_compatible_method}: checksum error, data {binascii.hexlify(self.recv_buf[:length])}'
+                )
                 self.raw_trans = True
                 self.recv_buf = b''
                 raise Exception('client_post_decrypt data uncorrect checksum')
@@ -443,7 +441,7 @@ class auth_chain_a(auth_base):
             return buf
         ret = b''
         if self.pack_id == 1:
-            tcp_mss = self.server_info.tcp_mss if self.server_info.tcp_mss < 1500 else 1500
+            tcp_mss = min(self.server_info.tcp_mss, 1500)
             self.server_info.tcp_mss = tcp_mss
             buf = struct.pack('<H', tcp_mss) + buf
             self.unit_len = tcp_mss - self.client_over_head
@@ -461,7 +459,7 @@ class auth_chain_a(auth_base):
         sendback = False
 
         if not self.has_recv_header:
-            if len(self.recv_buf) >= 12 or len(self.recv_buf) in [7, 8]:
+            if len(self.recv_buf) >= 12 or len(self.recv_buf) in {7, 8}:
                 recv_len = min(len(self.recv_buf), 12)
                 mac_key = self.server_info.recv_iv + self.server_info.key
                 md5data = hmac.new(mac_key, self.recv_buf[:4], self.hashfunc).digest()
@@ -481,11 +479,11 @@ class auth_chain_a(auth_base):
                 self.server_info.update_user_func(uid)
             else:
                 self.user_id_num = 0
-                if not self.server_info.users:
-                    self.user_key = self.server_info.key
-                else:
-                    self.user_key = self.server_info.recv_iv
-
+                self.user_key = (
+                    self.server_info.recv_iv
+                    if self.server_info.users
+                    else self.server_info.key
+                )
             md5data = hmac.new(self.user_key, self.recv_buf[12 : 12 + 20], self.hashfunc).digest()
             if md5data[:4] != self.recv_buf[32:36]:
                 logging.error('%s data uncorrect auth HMAC-MD5 from %s:%d, data %s' % (self.no_compatible_method, self.server_info.client, self.server_info.client_port, binascii.hexlify(self.recv_buf)))
@@ -510,7 +508,9 @@ class auth_chain_a(auth_base):
                 self.client_id = client_id
                 self.connection_id = connection_id
             else:
-                logging.info('%s: auth fail, data %s' % (self.no_compatible_method, binascii.hexlify(out_buf)))
+                logging.info(
+                    f'{self.no_compatible_method}: auth fail, data {binascii.hexlify(out_buf)}'
+                )
                 return self.not_match_return(self.recv_buf)
 
             self.encryptor = encrypt.Encryptor(to_bytes(base64.b64encode(self.user_key)) + to_bytes(base64.b64encode(self.last_client_hash)), 'rc4')
@@ -526,18 +526,19 @@ class auth_chain_a(auth_base):
             if length >= 4096:
                 self.raw_trans = True
                 self.recv_buf = b''
-                if self.recv_id == 0:
-                    logging.info(self.no_compatible_method + ': over size')
-                    return (b'E'*2048, False)
-                else:
+                if self.recv_id != 0:
                     raise Exception('server_post_decrype data error')
 
+                logging.info(f'{self.no_compatible_method}: over size')
+                return (b'E'*2048, False)
             if length + 4 > len(self.recv_buf):
                 break
 
             client_hash = hmac.new(mac_key, self.recv_buf[:length + 2], self.hashfunc).digest()
             if client_hash[:2] != self.recv_buf[length + 2 : length + 4]:
-                logging.info('%s: checksum error, data %s' % (self.no_compatible_method, binascii.hexlify(self.recv_buf[:length])))
+                logging.info(
+                    f'{self.no_compatible_method}: checksum error, data {binascii.hexlify(self.recv_buf[:length])}'
+                )
                 self.raw_trans = True
                 self.recv_buf = b''
                 if self.recv_id == 0:
@@ -560,17 +561,18 @@ class auth_chain_a(auth_base):
         return (out_buf, sendback)
 
     def client_udp_pre_encrypt(self, buf):
+        if self.user_key is None and b':' in to_bytes(
+            self.server_info.protocol_param
+        ):
+            try:
+                items = to_bytes(self.server_info.protocol_param).split(':')
+                self.user_key = self.hashfunc(items[1]).digest()
+                self.user_id = struct.pack('<I', int(items[0]))
+            except:
+                pass
         if self.user_key is None:
-            if b':' in to_bytes(self.server_info.protocol_param):
-                try:
-                    items = to_bytes(self.server_info.protocol_param).split(':')
-                    self.user_key = self.hashfunc(items[1]).digest()
-                    self.user_id = struct.pack('<I', int(items[0]))
-                except:
-                    pass
-            if self.user_key is None:
-                self.user_id = os.urandom(4)
-                self.user_key = self.server_info.key
+            self.user_id = os.urandom(4)
+            self.user_key = self.server_info.key
         authdata = os.urandom(3)
         mac_key = self.server_info.key
         md5data = hmac.new(mac_key, authdata, self.hashfunc).digest()
@@ -598,10 +600,11 @@ class auth_chain_a(auth_base):
             user_key = self.server_info.users[uid]
         else:
             uid = None
-            if not self.server_info.users:
-                user_key = self.server_info.key
-            else:
-                user_key = self.server_info.recv_iv
+            user_key = (
+                self.server_info.recv_iv
+                if self.server_info.users
+                else self.server_info.key
+            )
         authdata = os.urandom(7)
         mac_key = self.server_info.key
         md5data = hmac.new(mac_key, authdata, self.hashfunc).digest()
@@ -620,10 +623,11 @@ class auth_chain_a(auth_base):
             user_key = self.server_info.users[uid]
         else:
             uid = None
-            if not self.server_info.users:
-                user_key = self.server_info.key
-            else:
-                user_key = self.server_info.recv_iv
+            user_key = (
+                self.server_info.recv_iv
+                if self.server_info.users
+                else self.server_info.key
+            )
         if hmac.new(user_key, buf[:-1], self.hashfunc).digest()[:1] != buf[-1:]:
             return (b'', None)
         rand_len = self.udp_rnd_data_len(md5data, self.random_client)
@@ -649,11 +653,11 @@ class auth_chain_b(auth_chain_a):
         random = xorshift128plus()
         random.init_from_bin(key)
         list_len = random.next() % 8 + 4
-        for i in range(0, list_len):
+        for _ in range(list_len):
             self.data_size_list.append((int)(random.next() % 2340 % 2040 % 1440))
         self.data_size_list.sort()
         list_len = random.next() % 16 + 8
-        for i in range(0, list_len):
+        for _ in range(list_len):
             self.data_size_list2.append((int)(random.next() % 2340 % 2040 % 1440))
         self.data_size_list2.sort()
 
@@ -686,7 +690,5 @@ class auth_chain_b(auth_chain_a):
             return random.next() % 31
         if buf_size > 900:
             return random.next() % 127
-        if buf_size > 400:
-            return random.next() % 521
-        return random.next() % 1021
+        return random.next() % 521 if buf_size > 400 else random.next() % 1021
 

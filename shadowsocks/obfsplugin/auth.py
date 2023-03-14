@@ -54,10 +54,7 @@ obfs_map = {
 }
 
 def match_begin(str1, str2):
-    if len(str1) >= len(str2):
-        if str1[:len(str2)] == str2:
-            return True
-    return False
+    return len(str1) >= len(str2) and str1[:len(str2)] == str2
 
 class auth_base(plain.plain):
     def __init__(self, method):
@@ -155,28 +152,30 @@ class obfs_auth_v2_data(object):
         self.max_buffer = max(self.max_client * 2, 1024)
 
     def insert(self, client_id, connection_id):
-        if self.client_id.get(client_id, None) is None or not self.client_id[client_id].enable:
-            if self.client_id.first() is None or len(self.client_id) < self.max_client:
-                if client_id not in self.client_id:
-                    #TODO: check
-                    self.client_id[client_id] = client_queue(connection_id)
-                else:
-                    self.client_id[client_id].re_enable(connection_id)
-                return self.client_id[client_id].insert(connection_id)
-
-            if not self.client_id[self.client_id.first()].is_active():
-                del self.client_id[self.client_id.first()]
-                if client_id not in self.client_id:
-                    #TODO: check
-                    self.client_id[client_id] = client_queue(connection_id)
-                else:
-                    self.client_id[client_id].re_enable(connection_id)
-                return self.client_id[client_id].insert(connection_id)
-
-            logging.warn('auth_sha1_v2: no inactive client')
-            return False
-        else:
+        if (
+            self.client_id.get(client_id, None) is not None
+            and self.client_id[client_id].enable
+        ):
             return self.client_id[client_id].insert(connection_id)
+        if self.client_id.first() is None or len(self.client_id) < self.max_client:
+            if client_id not in self.client_id:
+                #TODO: check
+                self.client_id[client_id] = client_queue(connection_id)
+            else:
+                self.client_id[client_id].re_enable(connection_id)
+            return self.client_id[client_id].insert(connection_id)
+
+        if not self.client_id[self.client_id.first()].is_active():
+            del self.client_id[self.client_id.first()]
+            if client_id not in self.client_id:
+                #TODO: check
+                self.client_id[client_id] = client_queue(connection_id)
+            else:
+                self.client_id[client_id].re_enable(connection_id)
+            return self.client_id[client_id].insert(connection_id)
+
+        logging.warn('auth_sha1_v2: no inactive client')
+        return False
 
 class auth_sha1_v4(auth_base):
     def __init__(self, method):
@@ -245,7 +244,9 @@ class auth_sha1_v4(auth_base):
             self.server_info.data.local_client_id = b''
         if not self.server_info.data.local_client_id:
             self.server_info.data.local_client_id = os.urandom(4)
-            logging.debug("local_client_id %s" % (binascii.hexlify(self.server_info.data.local_client_id),))
+            logging.debug(
+                f"local_client_id {binascii.hexlify(self.server_info.data.local_client_id)}"
+            )
             self.server_info.data.connection_id = struct.unpack('<I', os.urandom(4))[0] & 0xFFFFFF
         self.server_info.data.connection_id += 1
         return b''.join([struct.pack('<I', utc_time),
@@ -337,7 +338,9 @@ class auth_sha1_v4(auth_base):
                 pos = struct.unpack('>H', self.recv_buf[7:9])[0] + 6
             out_buf = self.recv_buf[pos:length - 10]
             if len(out_buf) < 12:
-                logging.info('auth_sha1_v4: too short, data %s' % (binascii.hexlify(self.recv_buf),))
+                logging.info(
+                    f'auth_sha1_v4: too short, data {binascii.hexlify(self.recv_buf)}'
+                )
                 return self.not_match_return(self.recv_buf)
             utc_time = struct.unpack('<I', out_buf[:4])[0]
             client_id = struct.unpack('<I', out_buf[4:8])[0]
@@ -352,7 +355,7 @@ class auth_sha1_v4(auth_base):
                 self.client_id = client_id
                 self.connection_id = connection_id
             else:
-                logging.info('auth_sha1_v4: auth fail, data %s' % (binascii.hexlify(out_buf),))
+                logging.info(f'auth_sha1_v4: auth fail, data {binascii.hexlify(out_buf)}')
                 return self.not_match_return(self.recv_buf)
             self.recv_buf = self.recv_buf[length:]
             self.has_recv_header = True
@@ -363,25 +366,25 @@ class auth_sha1_v4(auth_base):
             if crc != self.recv_buf[2:4]:
                 self.raw_trans = True
                 logging.info('auth_sha1_v4: wrong crc')
-                if self.decrypt_packet_num == 0:
-                    logging.info('auth_sha1_v4: wrong crc')
-                    return (b'E'*2048, False)
-                else:
+                if self.decrypt_packet_num != 0:
                     raise Exception('server_post_decrype data error')
+                logging.info('auth_sha1_v4: wrong crc')
+                return (b'E'*2048, False)
             length = struct.unpack('>H', self.recv_buf[:2])[0]
             if length >= 8192 or length < 7:
                 self.raw_trans = True
                 self.recv_buf = b''
-                if self.decrypt_packet_num == 0:
-                    logging.info('auth_sha1_v4: over size')
-                    return (b'E'*2048, False)
-                else:
+                if self.decrypt_packet_num != 0:
                     raise Exception('server_post_decrype data error')
+                logging.info('auth_sha1_v4: over size')
+                return (b'E'*2048, False)
             if length > len(self.recv_buf):
                 break
 
             if struct.pack('<I', zlib.adler32(self.recv_buf[:length - 4]) & 0xFFFFFFFF) != self.recv_buf[length - 4:length]:
-                logging.info('auth_sha1_v4: checksum error, data %s' % (binascii.hexlify(self.recv_buf[:length]),))
+                logging.info(
+                    f'auth_sha1_v4: checksum error, data {binascii.hexlify(self.recv_buf[:length])}'
+                )
                 self.raw_trans = True
                 self.recv_buf = b''
                 if self.decrypt_packet_num == 0:
@@ -428,28 +431,30 @@ class obfs_auth_mu_data(object):
             self.user_id[user_id] = lru_cache.LRUCache()
         local_client_id = self.user_id[user_id]
 
-        if local_client_id.get(client_id, None) is None or not local_client_id[client_id].enable:
-            if local_client_id.first() is None or len(local_client_id) < self.max_client:
-                if client_id not in local_client_id:
-                    #TODO: check
-                    local_client_id[client_id] = client_queue(connection_id)
-                else:
-                    local_client_id[client_id].re_enable(connection_id)
-                return local_client_id[client_id].insert(connection_id)
-
-            if not local_client_id[local_client_id.first()].is_active():
-                del local_client_id[local_client_id.first()]
-                if client_id not in local_client_id:
-                    #TODO: check
-                    local_client_id[client_id] = client_queue(connection_id)
-                else:
-                    local_client_id[client_id].re_enable(connection_id)
-                return local_client_id[client_id].insert(connection_id)
-
-            logging.warn('auth_aes128: no inactive client')
-            return False
-        else:
+        if (
+            local_client_id.get(client_id, None) is not None
+            and local_client_id[client_id].enable
+        ):
             return local_client_id[client_id].insert(connection_id)
+        if local_client_id.first() is None or len(local_client_id) < self.max_client:
+            if client_id not in local_client_id:
+                #TODO: check
+                local_client_id[client_id] = client_queue(connection_id)
+            else:
+                local_client_id[client_id].re_enable(connection_id)
+            return local_client_id[client_id].insert(connection_id)
+
+        if not local_client_id[local_client_id.first()].is_active():
+            del local_client_id[local_client_id.first()]
+            if client_id not in local_client_id:
+                #TODO: check
+                local_client_id[client_id] = client_queue(connection_id)
+            else:
+                local_client_id[client_id].re_enable(connection_id)
+            return local_client_id[client_id].insert(connection_id)
+
+        logging.warn('auth_aes128: no inactive client')
+        return False
 
 class auth_aes128_sha1(auth_base):
     def __init__(self, method, hashfunc):
@@ -463,8 +468,12 @@ class auth_aes128_sha1(auth_base):
         self.client_id = 0
         self.connection_id = 0
         self.max_time_dif = 60 * 60 * 24 # time dif (second) setting
-        self.salt = hashfunc == hashlib.md5 and b"auth_aes128_md5" or b"auth_aes128_sha1"
-        self.no_compatible_method = hashfunc == hashlib.md5 and "auth_aes128_md5" or 'auth_aes128_sha1'
+        self.salt = (
+            b"auth_aes128_md5" if hashfunc == hashlib.md5 else b"auth_aes128_sha1"
+        )
+        self.no_compatible_method = (
+            "auth_aes128_md5" if hashfunc == hashlib.md5 else 'auth_aes128_sha1'
+        )
         self.extra_wait_size = struct.unpack('>H', os.urandom(2))[0] % 1024
         self.pack_id = 1
         self.recv_id = 1
@@ -567,7 +576,9 @@ class auth_aes128_sha1(auth_base):
             self.server_info.data.local_client_id = b''
         if not self.server_info.data.local_client_id:
             self.server_info.data.local_client_id = os.urandom(4)
-            logging.debug("local_client_id %s" % (binascii.hexlify(self.server_info.data.local_client_id),))
+            logging.debug(
+                f"local_client_id {binascii.hexlify(self.server_info.data.local_client_id)}"
+            )
             self.server_info.data.connection_id = struct.unpack('<I', os.urandom(4))[0] & 0xFFFFFF
         self.server_info.data.connection_id += 1
         return b''.join([struct.pack('<I', utc_time),
@@ -644,7 +655,7 @@ class auth_aes128_sha1(auth_base):
         sendback = False
 
         if not self.has_recv_header:
-            if len(self.recv_buf) >= 7 or len(self.recv_buf) in [2, 3]:
+            if len(self.recv_buf) >= 7 or len(self.recv_buf) in {2, 3}:
                 recv_len = min(len(self.recv_buf), 7)
                 mac_key = self.server_info.recv_iv + self.server_info.key
                 sha1data = hmac.new(mac_key, self.recv_buf[:1], self.hashfunc).digest()[:recv_len - 1]
@@ -666,10 +677,11 @@ class auth_aes128_sha1(auth_base):
                 self.user_key = self.hashfunc(self.server_info.users[uid]).digest()
                 self.server_info.update_user_func(uid)
             else:
-                if not self.server_info.users:
-                    self.user_key = self.server_info.key
-                else:
-                    self.user_key = self.server_info.recv_iv
+                self.user_key = (
+                    self.server_info.recv_iv
+                    if self.server_info.users
+                    else self.server_info.key
+                )
             encryptor = encrypt.Encryptor(to_bytes(base64.b64encode(self.user_key)) + self.salt, 'aes-128-cbc')
             head = encryptor.decrypt(b'\x00' * 16 + self.recv_buf[11:27] + b'\x00') # need an extra byte or recv empty
             length = struct.unpack('<H', head[12:14])[0]
@@ -681,7 +693,9 @@ class auth_aes128_sha1(auth_base):
             connection_id = struct.unpack('<I', head[8:12])[0]
             rnd_len = struct.unpack('<H', head[14:16])[0]
             if hmac.new(self.user_key, self.recv_buf[:length - 4], self.hashfunc).digest()[:4] != self.recv_buf[length - 4:length]:
-                logging.info('%s: checksum error, data %s' % (self.no_compatible_method, binascii.hexlify(self.recv_buf[:length])))
+                logging.info(
+                    f'{self.no_compatible_method}: checksum error, data {binascii.hexlify(self.recv_buf[:length])}'
+                )
                 return self.not_match_return(self.recv_buf)
             time_dif = common.int32(utc_time - (int(time.time()) & 0xffffffff))
             if time_dif < -self.max_time_dif or time_dif > self.max_time_dif:
@@ -693,7 +707,9 @@ class auth_aes128_sha1(auth_base):
                 self.client_id = client_id
                 self.connection_id = connection_id
             else:
-                logging.info('%s: auth fail, data %s' % (self.no_compatible_method, binascii.hexlify(out_buf)))
+                logging.info(
+                    f'{self.no_compatible_method}: auth fail, data {binascii.hexlify(out_buf)}'
+                )
                 return self.not_match_return(self.recv_buf)
             self.recv_buf = self.recv_buf[length:]
             self.has_recv_header = True
@@ -704,26 +720,26 @@ class auth_aes128_sha1(auth_base):
             mac = hmac.new(mac_key, self.recv_buf[:2], self.hashfunc).digest()[:2]
             if mac != self.recv_buf[2:4]:
                 self.raw_trans = True
-                logging.info(self.no_compatible_method + ': wrong crc')
-                if self.recv_id == 0:
-                    logging.info(self.no_compatible_method + ': wrong crc')
-                    return (b'E'*2048, False)
-                else:
+                logging.info(f'{self.no_compatible_method}: wrong crc')
+                if self.recv_id != 0:
                     raise Exception('server_post_decrype data error')
+                logging.info(f'{self.no_compatible_method}: wrong crc')
+                return (b'E'*2048, False)
             length = struct.unpack('<H', self.recv_buf[:2])[0]
             if length >= 8192 or length < 7:
                 self.raw_trans = True
                 self.recv_buf = b''
-                if self.recv_id == 0:
-                    logging.info(self.no_compatible_method + ': over size')
-                    return (b'E'*2048, False)
-                else:
+                if self.recv_id != 0:
                     raise Exception('server_post_decrype data error')
+                logging.info(f'{self.no_compatible_method}: over size')
+                return (b'E'*2048, False)
             if length > len(self.recv_buf):
                 break
 
             if hmac.new(mac_key, self.recv_buf[:length - 4], self.hashfunc).digest()[:4] != self.recv_buf[length - 4:length]:
-                logging.info('%s: checksum error, data %s' % (self.no_compatible_method, binascii.hexlify(self.recv_buf[:length])))
+                logging.info(
+                    f'{self.no_compatible_method}: checksum error, data {binascii.hexlify(self.recv_buf[:length])}'
+                )
                 self.raw_trans = True
                 self.recv_buf = b''
                 if self.recv_id == 0:
@@ -747,17 +763,18 @@ class auth_aes128_sha1(auth_base):
         return (out_buf, sendback)
 
     def client_udp_pre_encrypt(self, buf):
+        if self.user_key is None and b':' in to_bytes(
+            self.server_info.protocol_param
+        ):
+            try:
+                items = to_bytes(self.server_info.protocol_param).split(':')
+                self.user_key = self.hashfunc(items[1]).digest()
+                self.user_id = struct.pack('<I', int(items[0]))
+            except:
+                pass
         if self.user_key is None:
-            if b':' in to_bytes(self.server_info.protocol_param):
-                try:
-                    items = to_bytes(self.server_info.protocol_param).split(':')
-                    self.user_key = self.hashfunc(items[1]).digest()
-                    self.user_id = struct.pack('<I', int(items[0]))
-                except:
-                    pass
-            if self.user_key is None:
-                self.user_id = os.urandom(4)
-                self.user_key = self.server_info.key
+            self.user_id = os.urandom(4)
+            self.user_key = self.server_info.key
         buf += self.user_id
         return buf + hmac.new(self.user_key, buf, self.hashfunc).digest()[:4]
 
@@ -777,10 +794,11 @@ class auth_aes128_sha1(auth_base):
             user_key = self.hashfunc(self.server_info.users[uid]).digest()
         else:
             uid = None
-            if not self.server_info.users:
-                user_key = self.server_info.key
-            else:
-                user_key = self.server_info.recv_iv
+            user_key = (
+                self.server_info.recv_iv
+                if self.server_info.users
+                else self.server_info.key
+            )
         if hmac.new(user_key, buf[:-4], self.hashfunc).digest()[:4] != buf[-4:]:
             return (b'', None)
         return (buf[:-8], uid)

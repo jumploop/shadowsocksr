@@ -5,8 +5,7 @@ import re
 
 class miss:
     def ssr4(self,ssrurl):
-        missing_padding = 4 - len(ssrurl) % 4
-        if missing_padding:
+        if missing_padding := 4 - len(ssrurl) % 4:
             ssrurl += b'='* missing_padding
             return ssrurl
 

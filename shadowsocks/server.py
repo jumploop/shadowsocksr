@@ -47,9 +47,7 @@ def main():
     except ImportError:
         pass
 
-    if config['port_password']:
-        pass
-    else:
+    if not config['port_password']:
         config['port_password'] = {}
         server_port = config['server_port']
         if type(server_port) == list:
@@ -69,10 +67,7 @@ def main():
     tcp_servers = []
     udp_servers = []
     dns_resolver = asyncdns.DNSResolver()
-    if int(config['workers']) > 1:
-        stat_counter_dict = None
-    else:
-        stat_counter_dict = {}
+    stat_counter_dict = None if int(config['workers']) > 1 else {}
     port_password = config['port_password']
     config_password = config.get('password', 'm')
     del config['port_password']
@@ -102,8 +97,9 @@ def main():
             password = password_obfs
         a_config = config.copy()
         ipv6_ok = False
-        logging.info("server start with protocol[%s] password [%s] method [%s] obfs [%s] obfs_param [%s]" %
-                (protocol, password, method, obfs, obfs_param))
+        logging.info(
+            f"server start with protocol[{protocol}] password [{password}] method [{method}] obfs [{obfs}] obfs_param [{obfs_param}]"
+        )
         if 'server_ipv6' in a_config:
             try:
                 if len(a_config['server_ipv6']) > 2 and a_config['server_ipv6'][0] == "[" and a_config['server_ipv6'][-1] == "]":
@@ -173,7 +169,7 @@ def main():
         if os.name == 'posix':
             children = []
             is_child = False
-            for i in range(0, int(config['workers'])):
+            for i in range(int(config['workers'])):
                 r = os.fork()
                 if r == 0:
                     logging.info('worker started')
