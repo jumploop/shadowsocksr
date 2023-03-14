@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # Copyright 2015 clowwindy
@@ -24,6 +24,7 @@ import time
 
 if __name__ == '__main__':
     import os, sys, inspect
+
     file_path = os.path.dirname(os.path.realpath(inspect.getfile(inspect.currentframe())))
     sys.path.insert(0, os.path.join(file_path, '../'))
 
@@ -40,6 +41,15 @@ except:
 # no metter how large the cache or timeout value is
 
 SWEEP_MAX_ITEMS = 1024
+
+# https://stackoverflow.com/questions/70943244/attributeerror-module-collections-has-no-attribute-mutablemapping
+import sys
+
+if sys.version_info.major == 3 and sys.version_info.minor >= 10:
+    import collections
+
+    setattr(collections, "MutableMapping", collections.abc.MutableMapping)
+
 
 class LRUCache(collections.MutableMapping):
     """This class is not thread safe"""
@@ -87,7 +97,7 @@ class LRUCache(collections.MutableMapping):
             for key in self._keys_to_last_time:
                 return key
 
-    def sweep(self, sweep_item_cnt = SWEEP_MAX_ITEMS):
+    def sweep(self, sweep_item_cnt=SWEEP_MAX_ITEMS):
         # O(n - m)
         now = time.time()
         c = 0
@@ -127,6 +137,7 @@ class LRUCache(collections.MutableMapping):
         if c:
             logging.debug('%d keys swept' % c)
         return c < SWEEP_MAX_ITEMS
+
 
 def test():
     c = LRUCache(timeout=0.3)
@@ -174,6 +185,7 @@ def test():
     c['s']
     time.sleep(0.3)
     c.sweep()
+
 
 if __name__ == '__main__':
     test()

@@ -33,6 +33,7 @@ from shadowsocks import eventloop
 import server_pool
 import Config
 
+
 class ServerMgr(object):
 
     def __init__(self):
@@ -59,7 +60,7 @@ class ServerMgr(object):
 
     def _handle_data(self, sock):
         data, addr = sock.recvfrom(128)
-        #manage pwd:port:passwd:action
+        # manage pwd:port:passwd:action
         args = data.split(':')
         if len(args) < 4:
             return
@@ -94,6 +95,7 @@ class ServerMgr(object):
 
 def test():
     pass
+
 
 if __name__ == '__main__':
     test()

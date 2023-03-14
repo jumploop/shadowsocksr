@@ -19,7 +19,6 @@ from nose.plugins.base import Plugin
 
 
 class ExtensionPlugin(Plugin):
-
     name = "ExtensionPlugin"
 
     def options(self, parser, env):

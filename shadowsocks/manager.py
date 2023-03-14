@@ -27,7 +27,6 @@ import collections
 
 from shadowsocks import common, eventloop, tcprelay, udprelay, asyncdns, shell
 
-
 BUF_SIZE = 1506
 STAT_SEND_LIMIT = 50
 
@@ -168,7 +167,7 @@ class Manager(object):
                 send_data(r)
                 r.clear()
                 i = 0
-        if len(r) > 0 :
+        if len(r) > 0:
             send_data(r)
         self._statistics.clear()
 

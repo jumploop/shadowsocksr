@@ -27,11 +27,11 @@ import logging
 if __name__ == '__main__':
     import sys
     import inspect
+
     file_path = os.path.dirname(os.path.realpath(inspect.getfile(inspect.currentframe())))
     sys.path.insert(0, os.path.join(file_path, '../'))
 
 from shadowsocks import common, lru_cache, eventloop, shell
-
 
 CACHE_SWEEP_INTERVAL = 30
 
@@ -77,6 +77,7 @@ QTYPE_CNAME = 5
 QTYPE_NS = 2
 QCLASS_IN = 1
 
+
 def detect_ipv6_supprot():
     if 'has_ipv6' in dir(socket):
         try:
@@ -89,7 +90,9 @@ def detect_ipv6_supprot():
     print('IPv6 not support')
     return False
 
+
 IPV6_CONNECTION_SUPPORT = detect_ipv6_supprot()
+
 
 def build_address(address):
     address = address.strip(b'.')
@@ -424,7 +427,7 @@ class DNSResolver(object):
         else:
             data, addr = sock.recvfrom(1024)
             if addr not in self._servers:
-                logging.warn('received a packet other than our dns')
+                logging.warning('received a packet other than our dns')
                 return
             self._handle_data(data)
 
@@ -471,10 +474,10 @@ class DNSResolver(object):
                 return
             if False:
                 addrs = socket.getaddrinfo(hostname, 0, 0,
-                                       socket.SOCK_DGRAM, socket.SOL_UDP)
+                                           socket.SOCK_DGRAM, socket.SOL_UDP)
                 if addrs:
                     af, socktype, proto, canonname, sa = addrs[0]
-                    logging.debug('DNS resolve %s %s' % (hostname, sa[0]) )
+                    logging.debug('DNS resolve %s %s' , hostname, sa[0])
                     self._cache[hostname] = sa[0]
                     callback((hostname, sa[0]), None)
                     return
@@ -524,10 +527,11 @@ def test():
             if counter == 9:
                 dns_resolver.close()
                 loop.stop()
+
         a_callback = callback
         return a_callback
 
-    assert(make_callback() != make_callback())
+    assert (make_callback() != make_callback())
 
     dns_resolver.resolve(b'google.com', make_callback())
     dns_resolver.resolve('google.com', make_callback())
@@ -552,4 +556,3 @@ def test():
 
 if __name__ == '__main__':
     test()
-

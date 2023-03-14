@@ -25,6 +25,7 @@ import signal
 import time
 from shadowsocks import common, shell
 
+
 # this module is ported from ShadowVPN daemon.c
 
 
@@ -91,7 +92,6 @@ def freopen(f, mode, stream):
 
 
 def daemon_start(pid_file, log_file):
-
     def handle_exit(signum, _):
         if signum == signal.SIGTERM:
             sys.exit(0)

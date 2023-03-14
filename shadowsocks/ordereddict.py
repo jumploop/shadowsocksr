@@ -1,11 +1,13 @@
 import collections
 
+
 ################################################################################
 ### OrderedDict
 ################################################################################
 
 class OrderedDict(dict):
     'Dictionary that remembers insertion order'
+
     # An inherited dict maps keys to values.
     # The inherited dict provides __getitem__, __len__, __contains__, and get.
     # The remaining methods are order-aware.
@@ -32,7 +34,7 @@ class OrderedDict(dict):
         try:
             self.__root
         except AttributeError:
-            self.__root = root = []                     # sentinel node
+            self.__root = root = []  # sentinel node
             root[:] = [root, root, None]
             self.__map = {}
         self.__update(*args, **kwds)
@@ -53,26 +55,26 @@ class OrderedDict(dict):
         # removed by updating the links in the predecessor and successor nodes.
         dict_delitem(self, key)
         link_prev, link_next, _ = self.__map.pop(key)
-        link_prev[1] = link_next                        # update link_prev[NEXT]
-        link_next[0] = link_prev                        # update link_next[PREV]
+        link_prev[1] = link_next  # update link_prev[NEXT]
+        link_next[0] = link_prev  # update link_next[PREV]
 
     def __iter__(self):
         'od.__iter__() <==> iter(od)'
         # Traverse the linked list in order.
         root = self.__root
-        curr = root[1]                                  # start at the first node
+        curr = root[1]  # start at the first node
         while curr is not root:
-            yield curr[2]                               # yield the curr[KEY]
-            curr = curr[1]                              # move to next node
+            yield curr[2]  # yield the curr[KEY]
+            curr = curr[1]  # move to next node
 
     def __reversed__(self):
         'od.__reversed__() <==> reversed(od)'
         # Traverse the linked list in reverse order.
         root = self.__root
-        curr = root[0]                                  # start at the last node
+        curr = root[0]  # start at the last node
         while curr is not root:
-            yield curr[2]                               # yield the curr[KEY]
-            curr = curr[0]                              # move to previous node
+            yield curr[2]  # yield the curr[KEY]
+            curr = curr[0]  # move to previous node
 
     def clear(self):
         'od.clear() -> None.  Remove all items from od.'
@@ -111,7 +113,7 @@ class OrderedDict(dict):
 
     update = collections.MutableMapping.update
 
-    __update = update # let subclasses override update without breaking __init__
+    __update = update  # let subclasses override update without breaking __init__
 
     __marker = object()
 
@@ -211,4 +213,3 @@ class OrderedDict(dict):
     def viewitems(self):
         "od.viewitems() -> a set-like object providing a view on od's items"
         return ItemsView(self)
-

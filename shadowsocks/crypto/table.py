@@ -21,7 +21,6 @@ import string
 import struct
 import hashlib
 
-
 __all__ = ['ciphers']
 
 cached_tables = {}
@@ -65,12 +64,18 @@ class TableCipher(object):
         else:
             return translate(data, self._decrypt_table)
 
+    def clean(self):
+        pass
+
 class NoneCipher(object):
     def __init__(self, cipher_name, key, iv, op):
         pass
 
     def update(self, data):
         return data
+
+    def clean(self):
+        pass
 
 ciphers = {
     'none': (16, 0, NoneCipher),

@@ -19,6 +19,7 @@ if __name__ == '__main__':
     import tornado.web
     import urllib
 
+
     class MainHandler(tornado.web.RequestHandler):
         def get(self, project):
             try:
@@ -35,6 +36,7 @@ if __name__ == '__main__':
                                   (urllib.quote(coverage), color))
             except IOError:
                 raise tornado.web.HTTPError(404)
+
 
     application = tornado.web.Application([
         (r"/([a-zA-Z0-9\-_]+)", MainHandler),

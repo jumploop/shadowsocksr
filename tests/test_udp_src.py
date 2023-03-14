@@ -3,10 +3,8 @@
 import socket
 import socks
 
-
 SERVER_IP = '127.0.0.1'
 SERVER_PORT = 1081
-
 
 if __name__ == '__main__':
     # Test 1: same source port IPv4

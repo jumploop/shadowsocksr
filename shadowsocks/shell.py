@@ -26,7 +26,6 @@ import logging
 from shadowsocks.common import to_bytes, to_str, IPNetwork, PortRange
 from shadowsocks import encrypt
 
-
 VERBOSE_LEVEL = 5
 
 verbose = 0
@@ -52,6 +51,7 @@ def print_exception(e):
         import traceback
         traceback.print_exc()
 
+
 def __version():
     version_str = ''
     try:
@@ -65,8 +65,10 @@ def __version():
             pass
     return version_str
 
+
 def print_shadowsocks():
     print('ShadowsocksR %s' % __version())
+
 
 def log_shadowsocks_version():
     logging.info('ShadowsocksR %s' % __version())
@@ -83,6 +85,7 @@ def find_config():
         return file_name if os.path.exists(file_name) else None
 
     return sub_find(user_config_path) or sub_find(config_path)
+
 
 def check_config(config, is_local):
     if config.get('daemon', None) == 'stop':
@@ -106,18 +109,18 @@ def check_config(config, is_local):
     if 'server_port' in config and type(config['server_port']) != list:
         config['server_port'] = int(config['server_port'])
 
-    if config.get('local_address', '') in [b'0.0.0.0']:
+    if config.get('local_address', '') in ['0.0.0.0']:
         logging.warning('warning: local set to listen on 0.0.0.0, it\'s not safe')
     if config.get('server', '') in ['127.0.0.1', 'localhost']:
         logging.warning('warning: server set to listen on %s:%s, are you sure?' %
-                     (to_str(config['server']), config['server_port']))
+                        (to_str(config['server']), config['server_port']))
     if config.get('timeout', 300) < 100:
         logging.warning('warning: your timeout %d seems too short' %
-                     int(config.get('timeout')))
+                        int(config.get('timeout')))
     if config.get('timeout', 300) > 600:
         logging.warning('warning: your timeout %d seems too long' %
-                     int(config.get('timeout')))
-    if config.get('password') in [b'mypassword']:
+                        int(config.get('timeout')))
+    if config.get('password') in ['mypassword']:
         logging.error('DON\'T USE DEFAULT PASSWORD! Please change it in your '
                       'config.json!')
         sys.exit(1)
@@ -160,16 +163,15 @@ def get_config(is_local):
         if config_path is None:
             config_path = find_config()
 
-
         if config_path:
             logging.debug('loading config from %s' % config_path)
             with open(config_path, 'rb') as f:
                 try:
                     config = parse_json_in_str(remove_comment(f.read().decode('utf8')))
+                    logging.info('%s file content:%s', config_path, config)
                 except ValueError as e:
                     logging.error('found an error in config.json: %s', str(e))
                     sys.exit(1)
-
 
         v_count = 0
         for key, value in optlist:
@@ -295,7 +297,7 @@ def get_config(is_local):
     logging.basicConfig(level=level,
                         format='%(asctime)s %(levelname)-8s %(filename)s:%(lineno)s %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
-
+    logging.info('config: %s', config)
     check_config(config, is_local)
 
     return config
@@ -398,6 +400,31 @@ def _decode_dict(data):
         rv[key] = value
     return rv
 
+
+def _byteify(data):
+    if isinstance(data, str):
+        return data
+
+    # If this is a list of values, return list of byteified values
+    if isinstance(data, list):
+        return [_byteify(item) for item in data]
+    # If this is a dictionary, return dictionary of byteified keys and values
+    # but only if we haven't already byteified it
+    if isinstance(data, dict):
+        return {
+            _byteify(key): _byteify(value)
+            for key, value in data.items()  # changed to .items() for Python 2.7/3
+        }
+
+    # Python 3 compatible duck-typing
+    # If this is a Unicode string, return its string representation
+    if str(type(data)) == "<type 'unicode'>":
+        return data.encode('utf-8')
+
+    # If it's anything else, return it in its original form
+    return data
+
+
 class JSFormat:
     def __init__(self):
         self.state = 0
@@ -435,11 +462,13 @@ class JSFormat:
                 return "\n"
         return ""
 
+
 def remove_comment(json):
     fmt = JSFormat()
     return "".join([fmt.push(c) for c in json])
 
 
 def parse_json_in_str(data):
+    logging.info('data: %s', data)
     # parse json and convert everything from unicode to str
-    return json.loads(data, object_hook=_decode_dict)
+    return json.loads(data, object_hook=_byteify)

@@ -3,25 +3,25 @@
 result=0
 
 function run_test {
-    printf '\e[0;36m'
-    echo "running test: $command $@"
-    printf '\e[0m'
+  printf '\e[0;36m'
+  echo "running test: $command $@"
+  printf '\e[0m'
 
-    $command "$@"
-    status=$?
-    if [ $status -ne 0 ]; then
-        printf '\e[0;31m'
-        echo "test failed: $command $@"
-        printf '\e[0m'
-        echo
-        result=1
-    else
-        printf '\e[0;32m'
-        echo OK
-        printf '\e[0m'
-        echo
-    fi
-    return 0
+  $command "$@"
+  status=$?
+  if [ $status -ne 0 ]; then
+    printf '\e[0;31m'
+    echo "test failed: $command $@"
+    printf '\e[0m'
+    echo
+    result=1
+  else
+    printf '\e[0;32m'
+    echo OK
+    printf '\e[0m'
+    echo
+  fi
+  return 0
 }
 
 python --version
@@ -58,14 +58,14 @@ run_test python tests/test.py --with-coverage --should-fail --tcp-only --url="ht
 # test localhost is available when forbidden list is empty
 run_test python tests/test.py --with-coverage --tcp-only --url="http://127.0.0.1/" -b "-m aes-256-cfb -k testrc4 -s 127.0.0.1 -p 8388 --forbidden-ip=" -a "-m aes-256-cfb -k testrc4 -s 127.0.0.1 -p 8388 -l 1081 -t 30 -b 127.0.0.1"
 
-if [ -f /proc/sys/net/ipv4/tcp_fastopen ] ; then
-    if [ 3 -eq `cat /proc/sys/net/ipv4/tcp_fastopen` ] ; then
-        # we have to run it twice:
-        # the first time there's no syn cookie
-        # the second time there is syn cookie
-        run_test python tests/test.py --with-coverage -c tests/fastopen.json
-        run_test python tests/test.py --with-coverage -c tests/fastopen.json
-    fi
+if [ -f /proc/sys/net/ipv4/tcp_fastopen ]; then
+  if [ 3 -eq "$(cat /proc/sys/net/ipv4/tcp_fastopen)" ]; then
+    # we have to run it twice:
+    # the first time there's no syn cookie
+    # the second time there is syn cookie
+    run_test python tests/test.py --with-coverage -c tests/fastopen.json
+    run_test python tests/test.py --with-coverage -c tests/fastopen.json
+  fi
 fi
 
 run_test tests/test_large_file.sh
@@ -77,6 +77,6 @@ rm -rf htmlcov
 rm -rf tmp
 coverage html --include=shadowsocks/*
 
-coverage report --include=shadowsocks/* | tail -n1 | rev | cut -d' ' -f 1 | rev > /tmp/shadowsocks-coverage
+coverage report --include=shadowsocks/* | tail -n1 | rev | cut -d' ' -f 1 | rev >/tmp/shadowsocks-coverage
 
 exit $result

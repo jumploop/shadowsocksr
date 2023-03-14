@@ -15,8 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from __future__ import absolute_import, division, print_function, \
-    with_statement
+from __future__ import absolute_import, division, print_function, with_statement
 
 import sys
 import os
@@ -105,10 +104,24 @@ try:
         if stage == 1:
             time.sleep(2)
 
-            p3 = Popen(['curl', config.url, '-v', '-L',
-                        '--socks5-hostname', '127.0.0.1:1081',
-                        '-m', '15', '--connect-timeout', '10'],
-                       stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+            p3 = Popen(
+                [
+                    'curl',
+                    config.url,
+                    '-v',
+                    '-L',
+                    '--socks5-hostname',
+                    '127.0.0.1:1081',
+                    '-m',
+                    '15',
+                    '--connect-timeout',
+                    '10',
+                ],
+                stdin=PIPE,
+                stdout=PIPE,
+                stderr=PIPE,
+                close_fds=True,
+            )
             if p3 is not None:
                 fdset.append(p3.stdout)
                 fdset.append(p3.stderr)
@@ -128,9 +141,13 @@ try:
                     sys.exit(1)
             if config.tcp_only:
                 break
-            p4 = Popen(['socksify', 'dig', '@%s' % config.dns,
-                        'www.google.com'],
-                       stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+            p4 = Popen(
+                ['socksify', 'dig', '@%s' % config.dns, 'www.google.com'],
+                stdin=PIPE,
+                stdout=PIPE,
+                stderr=PIPE,
+                close_fds=True,
+            )
             if p4 is not None:
                 fdset.append(p4.stdout)
                 fdset.append(p4.stderr)
