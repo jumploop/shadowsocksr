@@ -1158,7 +1158,7 @@ Port_mode_switching() {
 }
 # 给ssr日志添加日志转储
 ssr_logrotate() {
-  if grep "/var/log/ssserver.log" /etc/logrotate.conf; then
+  if grep "/var/log/ssserver.log" /etc/logrotate.conf >/dev/null; then
     echo "/var/log/ssserver.log already exists"
   else
     cat >>/etc/logrotate.conf <<-EOF
