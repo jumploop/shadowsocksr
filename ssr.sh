@@ -1158,16 +1158,20 @@ Port_mode_switching() {
 }
 # 给ssr日志添加日志转储
 ssr_logrotate() {
-  cat >>/etc/logrotate.conf <<-EOF
-/var/log/ssserver.log{
+  if grep "/var/log/ssserver.log" /etc/logrotate.conf; then
+    echo "/var/log/ssserver.log already exists"
+  else
+    cat >>/etc/logrotate.conf <<-EOF
+/var/log/ssserver.log {
   weekly
   rotate 6
   missingok
   notifempty
   compress
-  size 1M
+  minsize 1M
 }
 EOF
+  fi
   /usr/sbin/logrotate /etc/logrotate.conf
 }
 
