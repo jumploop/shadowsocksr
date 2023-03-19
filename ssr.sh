@@ -1161,7 +1161,7 @@ ssr_logrotate() {
   if [ -e /etc/logrotate.d/ssr ]; then
     echo "/var/log/ssserver.log already exists"
   else
-    cat >>/etc/logrotate.d/ssr <<-EOF
+    cat >/etc/logrotate.d/ssr <<-EOF
 /var/log/ssserver.log {
   weekly
   rotate 6
