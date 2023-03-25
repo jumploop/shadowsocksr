@@ -1168,7 +1168,7 @@ ssr_logrotate() {
   missingok
   notifempty
   compress
-  minsize 100M
+  minsize 50M
   create 0644 root root
   sharedscripts
   postrotate
