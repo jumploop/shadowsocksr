@@ -623,20 +623,46 @@ Download_SSR() {
   [[ ! -e ${config_folder} ]] && echo -e "${Error} ShadowsocksR配置文件的文件夹 建立失败 !" && exit 1
   echo -e "${Info} ShadowsocksR服务端 下载完成 !"
 }
+
+Add_ssr_Service() {
+  local ssr_path
+  ssr_path=/usr/lib/systemd/system/ssr.service
+  cat >${ssr_path} <<EOF
+[Unit]
+Description=SSR server daemon
+After=network.target sshd-keygen.service
+
+[Service]
+Type=forking
+ExecStart=/etc/init.d/ssr start
+ExecStop=/etc/init.d/ssr stop
+ExecReload=/etc/init.d/ssr restart
+KillMode=process
+Restart=on-failure
+RestartSec=42s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+}
 Service_SSR() {
+
+  [[ ! -e /usr/lib/systemd/system ]] && mkdir /usr/lib/systemd/system
   if [[ ${release} = "centos" ]]; then
     if ! wget --no-check-certificate https://${github}/doubi/master/service/ssr_centos -O /etc/init.d/ssr; then
       echo -e "${Error} ShadowsocksR服务 管理脚本下载失败 !" && exit 1
     fi
     chmod +x /etc/init.d/ssr
-    chkconfig --add ssr
-    chkconfig ssr on
+    Add_ssr_Service
+    #    chkconfig --add ssr
+    #    chkconfig ssr on
   else
     if ! wget --no-check-certificate https://${github}/doubi/master/service/ssr_debian -O /etc/init.d/ssr; then
       echo -e "${Error} ShadowsocksR服务 管理脚本下载失败 !" && exit 1
     fi
     chmod +x /etc/init.d/ssr
-    update-rc.d -f ssr defaults
+    Add_ssr_Service
+    #    update-rc.d -f ssr defaults
   fi
   echo -e "${Info} ShadowsocksR服务 管理脚本下载完成 !"
 }
@@ -1183,7 +1209,8 @@ Start_SSR() {
   SSR_installation_status
   check_pid
   [[ -n ${PID} ]] && echo -e "${Error} ShadowsocksR 正在运行 !" && exit 1
-  /etc/init.d/ssr start
+  #  /etc/init.d/ssr start
+  systemctl start ssr
   check_pid
   [[ -n ${PID} ]] && View_User
 }
@@ -1191,13 +1218,16 @@ Stop_SSR() {
   SSR_installation_status
   check_pid
   [[ -z ${PID} ]] && echo -e "${Error} ShadowsocksR 未运行 !" && exit 1
-  /etc/init.d/ssr stop
+  #  /etc/init.d/ssr stop
+  systemctl stop ssr
+
 }
 Restart_SSR() {
   SSR_installation_status
   check_pid
-  [[ -n ${PID} ]] && /etc/init.d/ssr stop
-  /etc/init.d/ssr start
+  #  [[ -n ${PID} ]] && /etc/init.d/ssr stop
+  systemctl restart ssr
+  #  /etc/init.d/ssr start
   check_pid
   [[ -n ${PID} ]] && View_User
 }
