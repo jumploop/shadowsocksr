@@ -635,8 +635,8 @@ After=network.target sshd-keygen.service
 [Service]
 Type=forking
 ExecStart=/etc/init.d/ssr start
-ExecStop=/etc/init.d/ssr stop
-ExecReload=/etc/init.d/ssr restart
+ExecStop=kill -9 $(pidof python)
+ExecReload=kill -9 $(pidof python) && /etc/init.d/ssr start
 KillMode=process
 Restart=on-failure
 RestartSec=42s
@@ -654,6 +654,7 @@ Service_SSR() {
     fi
     chmod +x /etc/init.d/ssr
     Add_ssr_Service
+    systemctl enable ssr
     #    chkconfig --add ssr
     #    chkconfig ssr on
   else
@@ -662,6 +663,7 @@ Service_SSR() {
     fi
     chmod +x /etc/init.d/ssr
     Add_ssr_Service
+    systemctl enable ssr
     #    update-rc.d -f ssr defaults
   fi
   echo -e "${Info} ShadowsocksR服务 管理脚本下载完成 !"
