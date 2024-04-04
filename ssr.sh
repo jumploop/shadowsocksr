@@ -655,6 +655,7 @@ Service_SSR() {
     fi
     chmod +x /etc/init.d/ssr
     Add_ssr_Service
+    systemctl daemon-reload
     systemctl enable ssr
     #    chkconfig --add ssr
     #    chkconfig ssr on
@@ -664,6 +665,7 @@ Service_SSR() {
     fi
     chmod +x /etc/init.d/ssr
     Add_ssr_Service
+    systemctl daemon-reload
     systemctl enable ssr
     #    update-rc.d -f ssr defaults
   fi
