@@ -34,6 +34,7 @@ Error="${Red_font_prefix}[错误]${Font_color_suffix}"
 Tip="${Green_font_prefix}[注意]${Font_color_suffix}"
 Separator_1="——————————————————————————————"
 github="raw.githubusercontent.com/jumploop"
+jq_version="1.7"
 
 check_root() {
   [[ $EUID != 0 ]] && echo -e "${Error} 当前账号非ROOT(或没有ROOT权限)，无法继续操作，请使用${Green_background_prefix} sudo su ${Font_color_suffix}来获取临时ROOT权限（执行后会提示输入当前账号的密码）。" && exit 1
@@ -673,11 +674,14 @@ JQ_install() {
   if [[ ! -e ${jq_file} ]]; then
     cd "${ssr_folder}" || exit
     if [[ ${bit} = "x86_64" ]]; then
-      mv "jq-linux64" "jq"
-      #wget --no-check-certificate "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -O ${jq_file}
+      if ! wget --no-check-certificate "https://github.com/stedolan/jq/releases/download/jq-${jq_version}/jq-linux64" -O ${jq_file}; then
+        mv "jq-linux64" "jq"
+      fi
     else
-      mv "jq-linux32" "jq"
-      #wget --no-check-certificate "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux32" -O ${jq_file}
+
+      if ! wget --no-check-certificate "https://github.com/stedolan/jq/releases/download/jq-${jq_version}/jq-linux32" -O ${jq_file}; then
+        mv "jq-linux32" "jq"
+      fi
     fi
     [[ ! -e ${jq_file} ]] && echo -e "${Error} JQ解析器 重命名失败，请检查 !" && exit 1
     chmod +x ${jq_file}
@@ -1343,7 +1347,7 @@ Configure_LotServer() {
 }
 Install_LotServer() {
   [[ -e ${LotServer_file} ]] && echo -e "${Error} LotServer 已安装 !" && exit 1
-  #Github: https://github.com/0oVicero0/serverSpeeder_Install
+  #Github: https://github.com/0oVicero0/serverSpeeser_Install
   wget --no-check-certificate -qO /tmp/appex.sh "https://${github}/serverSpeeder_Install/master/appex.sh"
   [[ ! -e "/tmp/appex.sh" ]] && echo -e "${Error} LotServer 安装脚本下载失败 !" && exit 1
   bash /tmp/appex.sh 'install'
