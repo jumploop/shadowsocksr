@@ -631,16 +631,15 @@ Add_ssr_Service() {
   cat >${ssr_path} <<EOF
 [Unit]
 Description=SSR server daemon
-After=network.target sshd-keygen.service
+After=network.target
 
 [Service]
 Type=forking
 ExecStart=/etc/init.d/ssr start
-ExecStop=kill -9 $(pidof python)
-ExecReload=kill -9 $(pidof python) && /etc/init.d/ssr start
+ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
 Restart=on-failure
-RestartSec=42s
+RestartSec=42
 
 [Install]
 WantedBy=multi-user.target
