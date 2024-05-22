@@ -637,9 +637,6 @@ After=network.target
 Type=forking
 ExecStart=/etc/init.d/ssr start
 ExecReload=/bin/kill -HUP $MAINPID
-KillMode=process
-Restart=on-failure
-RestartSec=42
 
 [Install]
 WantedBy=multi-user.target
