@@ -1419,10 +1419,8 @@ class TCPRelay(object):
         logging.debug('port %d connections %d' % (port, newval))
         connections_step = 25
         if newval >= stat_dict.get(-1, 0) + connections_step:
-            logging.info('port %d connections up to %d' % (port, newval))
             stat_dict[-1] = stat_dict.get(-1, 0) + connections_step
         elif newval <= stat_dict.get(-1, 0) - connections_step:
-            logging.info('port %d connections down to %d' % (port, newval))
             stat_dict[-1] = stat_dict.get(-1, 0) - connections_step
 
     def stat_add(self, local_addr, val):
