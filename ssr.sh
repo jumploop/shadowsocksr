@@ -634,9 +634,12 @@ Description=SSR server daemon
 After=network.target
 
 [Service]
-Type=forking
-ExecStart=/etc/init.d/ssr start
+Type=simple
+ExecStart=/usr/bin/python /usr/local/shadowsocksr/shadowsocks/server.py -c /etc/shadowsocksr/user-config.json a
 ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+RestartSec=42s
 
 [Install]
 WantedBy=multi-user.target
