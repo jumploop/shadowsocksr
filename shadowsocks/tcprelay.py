@@ -639,7 +639,6 @@ class TCPRelayHandler(object):
                 if data is None:
                     data = self._handel_protocol_error(self._client_address, ogn_data)
                 header_result = parse_header(data)
-                logging.info('first header_result is %s', header_result)
                 if header_result is not None:
                     try:
                         common.to_str(header_result[2])
@@ -655,7 +654,6 @@ class TCPRelayHandler(object):
                 server_info.buffer_size = self._recv_buffer_size
                 server_info = self._protocol.get_server_info()
                 server_info.buffer_size = self._recv_buffer_size
-            logging.info('last header_result is %s', header_result)
             connecttype, addrtype, remote_addr, remote_port, header_length = header_result
             if connecttype != 0:
                 pass
