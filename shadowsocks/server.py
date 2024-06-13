@@ -23,6 +23,9 @@ import os
 import logging
 import signal
 
+FORMATER = '%(asctime)s %(levelname)-8s %(filename)s:%(lineno)d %(message)s'
+
+logging.basicConfig(filename='/var/log/ssserver.log', level=logging.INFO, format=FORMATER, datefmt='%Y-%m-%d %H:%M:%S')
 if __name__ == '__main__':
     import inspect
 
@@ -31,7 +34,6 @@ if __name__ == '__main__':
 
 from shadowsocks import shell, daemon, eventloop, tcprelay, udprelay, \
     asyncdns, manager, common
-
 
 
 def main():
@@ -107,7 +109,7 @@ def main():
         a_config = config.copy()
         ipv6_ok = False
         logging.info("server start with protocol[%s] password [%s] method [%s] obfs [%s] obfs_param [%s]" %
-                    (protocol, password, method, obfs, obfs_param))
+                     (protocol, password, method, obfs, obfs_param))
         if 'server_ipv6' in a_config:
             try:
                 if len(a_config['server_ipv6']) > 2 and a_config['server_ipv6'][0] == "[" and a_config['server_ipv6'][
@@ -124,7 +126,7 @@ def main():
                 a_config['out_bindv6'] = bindv6
                 a_config['server'] = a_config['server_ipv6']
                 logging.info("starting server at [%s]:%d" %
-                            (a_config['server'], int(port)))
+                             (a_config['server'], int(port)))
                 tcp_servers.append(tcprelay.TCPRelay(a_config, dns_resolver, False, stat_counter=stat_counter_dict))
                 udp_servers.append(udprelay.UDPRelay(a_config, dns_resolver, False, stat_counter=stat_counter_dict))
                 if a_config['server_ipv6'] == "::":
@@ -144,7 +146,7 @@ def main():
             a_config['out_bind'] = bind
             a_config['out_bindv6'] = bindv6
             logging.info("starting server at %s:%d" %
-                        (a_config['server'], int(port)))
+                         (a_config['server'], int(port)))
             logging.info('a_config: %s' % a_config)
             tcp_servers.append(tcprelay.TCPRelay(a_config, dns_resolver, False, stat_counter=stat_counter_dict))
             udp_servers.append(udprelay.UDPRelay(a_config, dns_resolver, False, stat_counter=stat_counter_dict))
