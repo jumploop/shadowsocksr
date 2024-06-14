@@ -23,9 +23,6 @@ import os
 import logging
 import signal
 
-FORMATER = '%(asctime)s %(levelname)-8s %(filename)s:%(lineno)d %(message)s'
-
-logging.basicConfig(filename='/var/log/ssserver.log', level=logging.INFO, format=FORMATER, datefmt='%Y-%m-%d %H:%M:%S')
 if __name__ == '__main__':
     import inspect
 
