@@ -67,11 +67,11 @@ def __version():
 
 
 def print_shadowsocks():
-    print('ShadowsocksR %s' % __version())
+    print('ShadowsocksR %s', __version())
 
 
 def log_shadowsocks_version():
-    logging.info('ShadowsocksR %s' % __version())
+    logging.info('ShadowsocksR %s', __version())
 
 
 def find_config():
@@ -109,18 +109,18 @@ def check_config(config, is_local):
     if 'server_port' in config and type(config['server_port']) != list:
         config['server_port'] = int(config['server_port'])
 
-    if config.get('local_address', '') in ['0.0.0.0']:
+    if config.get('local_address', '') in [b'0.0.0.0']:
         logging.warning('warning: local set to listen on 0.0.0.0, it\'s not safe')
     if config.get('server', '') in ['127.0.0.1', 'localhost']:
-        logging.warning('warning: server set to listen on %s:%s, are you sure?' %
-                        (to_str(config['server']), config['server_port']))
+        logging.warning('warning: server set to listen on %s:%s, are you sure?',
+                        to_str(config['server']), config['server_port'])
     if config.get('timeout', 300) < 100:
-        logging.warning('warning: your timeout %d seems too short' %
+        logging.warning('warning: your timeout %d seems too short',
                         int(config.get('timeout')))
     if config.get('timeout', 300) > 600:
-        logging.warning('warning: your timeout %d seems too long' %
+        logging.warning('warning: your timeout %d seems too long',
                         int(config.get('timeout')))
-    if config.get('password') in ['mypassword']:
+    if config.get('password') in [b'mypassword']:
         logging.error('DON\'T USE DEFAULT PASSWORD! Please change it in your '
                       'config.json!')
         sys.exit(1)
@@ -164,11 +164,11 @@ def get_config(is_local):
             config_path = find_config()
 
         if config_path:
-            logging.debug('loading config from %s' % config_path)
+            logging.debug('loading config from %s', config_path)
             with open(config_path, 'rb') as f:
                 try:
                     config = parse_json_in_str(remove_comment(f.read().decode('utf8')))
-                    logging.info('%s file content:%s', config_path, config)
+                    logging.info('the file %s content is %s', config_path, config)
                 except ValueError as e:
                     logging.error('found an error in config.json: %s', str(e))
                     sys.exit(1)
@@ -294,10 +294,9 @@ def get_config(is_local):
     else:
         level = logging.INFO
     verbose = config['verbose']
-    logging.basicConfig(level=level,
+    logging.basicConfig(filename='/var/log/ssserver.log', level=level,
                         format='%(asctime)s %(levelname)-8s %(filename)s:%(lineno)s %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
-    logging.info('config: %s', config)
     check_config(config, is_local)
 
     return config
@@ -469,6 +468,6 @@ def remove_comment(json):
 
 
 def parse_json_in_str(data):
-    logging.info('data: %s', data)
+    logging.info('data is %s', data)
     # parse json and convert everything from unicode to str
-    return json.loads(data, object_hook=_byteify)
+    return json.loads(data, object_hook=_decode_dict)

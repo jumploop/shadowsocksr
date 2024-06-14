@@ -16,7 +16,3 @@
 
 from __future__ import absolute_import, division, print_function, \
     with_statement
-import logging
-FORMATER = '%(asctime)s %(levelname)-8s %(filename)s:%(lineno)d %(message)s'
-
-logging.basicConfig(filename='/var/log/ssserver.log', level=logging.INFO, format=FORMATER, datefmt='%Y-%m-%d %H:%M:%S')

@@ -37,7 +37,7 @@ def main():
     shell.check_python()
 
     config = shell.get_config(False)
-    logging.info('config: %s', config)
+    logging.info('get config is %s', config)
     shell.log_shadowsocks_version()
 
     daemon.daemon_exec(config)
@@ -45,7 +45,7 @@ def main():
     try:
         import resource
         logging.info(
-            'current process RLIMIT_NOFILE resource: soft %d hard %d' % resource.getrlimit(resource.RLIMIT_NOFILE))
+            'current process RLIMIT_NOFILE resource: soft %d hard %d', resource.getrlimit(resource.RLIMIT_NOFILE))
     except ImportError:
         pass
 
@@ -76,7 +76,6 @@ def main():
     else:
         stat_counter_dict = {}
     port_password = config['port_password']
-    logging.info('port_password:%s', port_password)
     config_password = config.get('password', 'm')
     del config['port_password']
     for port, password_obfs in port_password.items():
@@ -105,8 +104,8 @@ def main():
             password = password_obfs
         a_config = config.copy()
         ipv6_ok = False
-        logging.info("server start with protocol[%s] password [%s] method [%s] obfs [%s] obfs_param [%s]" %
-                     (protocol, password, method, obfs, obfs_param))
+        logging.info("server start with protocol[%s] password [%s] method [%s] obfs [%s] obfs_param [%s]",
+                     protocol, password, method, obfs, obfs_param)
         if 'server_ipv6' in a_config:
             try:
                 if len(a_config['server_ipv6']) > 2 and a_config['server_ipv6'][0] == "[" and a_config['server_ipv6'][
@@ -122,11 +121,10 @@ def main():
                 a_config['out_bind'] = bind
                 a_config['out_bindv6'] = bindv6
                 a_config['server'] = a_config['server_ipv6']
-                logging.info("starting server at [%s]:%d" %
-                             (a_config['server'], int(port)))
+                logging.info("starting server at [%s]:%d", a_config['server'], int(port))
                 tcp_servers.append(tcprelay.TCPRelay(a_config, dns_resolver, False, stat_counter=stat_counter_dict))
                 udp_servers.append(udprelay.UDPRelay(a_config, dns_resolver, False, stat_counter=stat_counter_dict))
-                if a_config['server_ipv6'] == "::":
+                if a_config['server_ipv6'] == b"::":
                     ipv6_ok = True
             except Exception as e:
                 shell.print_exception(e)
@@ -142,9 +140,8 @@ def main():
             a_config['obfs_param'] = obfs_param
             a_config['out_bind'] = bind
             a_config['out_bindv6'] = bindv6
-            logging.info("starting server at %s:%d" %
-                         (a_config['server'], int(port)))
-            logging.info('a_config: %s' % a_config)
+            logging.info("starting server at %s:%d", a_config['server'], int(port))
+            logging.info('last config is %s', a_config)
             tcp_servers.append(tcprelay.TCPRelay(a_config, dns_resolver, False, stat_counter=stat_counter_dict))
             udp_servers.append(udprelay.UDPRelay(a_config, dns_resolver, False, stat_counter=stat_counter_dict))
         except Exception as e:
