@@ -710,11 +710,13 @@ Installation_dependency() {
 # 关闭防火墙
 shutdown_firewalld() {
   if [[ ${release} = "centos" ]]; then
-    status=$(firewall-cmd --state)
-    if [[ ${status} = "running" ]]; then
+    firewall-cmd --state >/tmp/status
+    if grep "running" /tmp/status; then
       echo -e "${Info} 开始关闭防火墙..."
       systemctl stop firewalld.service
       systemctl disable firewalld.service
+    else
+      echo -e "${Info} 防火墙已关闭..."
     fi
   fi
 }
@@ -747,7 +749,7 @@ Install_SSR() {
 }
 Update_SSR() {
   SSR_installation_status
-  cd /tmp|| exit
+  cd /tmp || exit
   # echo -e "因破娃暂停更新ShadowsocksR服务端，所以此功能临时禁用。"
   wget -N --no-check-certificate "https://github.com/jumploop/shadowsocksr/archive/manyuser.zip"
   [[ ! -e "manyuser.zip" ]] && echo -e "${Error} ShadowsocksR服务端 更新失败，请检查 !" && rm -rf manyuser.zip && exit 1
@@ -1203,7 +1205,7 @@ Port_mode_switching() {
 # 给ssr日志添加日志转储
 ssr_logrotate() {
   if [ -e /etc/logrotate.d/ssrlog ]; then
-    echo "/var/log/ssserver.log already exists"
+    echo "ssrlog rotate already exists"
   else
     cat >/etc/logrotate.d/ssrlog <<-EOF
 /var/log/ssserver.log
@@ -1220,6 +1222,7 @@ ssr_logrotate() {
     endscript
 }
 EOF
+    echo "ssrlog rotate set finished"
   fi
 }
 
