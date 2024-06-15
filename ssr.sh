@@ -609,16 +609,19 @@ Debian_apt() {
 # 下载 ShadowsocksR
 Download_SSR() {
   cd "/usr/local/" || exit
-  wget -N --no-check-certificate "https://github.com/jumploop/shadowsocksr/archive/manyuser.zip"
   #git config --global http.sslVerify false
   #env GIT_SSL_NO_VERIFY=true git clone -b manyuser https://github.com/ToyoDAdoubiBackup/shadowsocksr.git
-  #[[ ! -e ${ssr_folder} ]] && echo -e "${Error} ShadowsocksR服务端 下载失败 !" && exit 1
-  [[ ! -e "manyuser.zip" ]] && echo -e "${Error} ShadowsocksR服务端 压缩包 下载失败 !" && rm -rf manyuser.zip && exit 1
-  unzip "manyuser.zip"
-  [[ ! -e "/usr/local/shadowsocksr-manyuser/" ]] && echo -e "${Error} ShadowsocksR服务端 解压失败 !" && rm -rf manyuser.zip && exit 1
-  mv "/usr/local/shadowsocksr-manyuser/" "/usr/local/shadowsocksr/"
-  [[ ! -e "/usr/local/shadowsocksr/" ]] && echo -e "${Error} ShadowsocksR服务端 重命名失败 !" && rm -rf manyuser.zip && rm -rf "/usr/local/shadowsocksr-manyuser/" && exit 1
-  rm -rf manyuser.zip
+  if git clone -b manyuser https://github.com/jumploop/shadowsocksr.git; then
+    [[ ! -e ${ssr_folder} ]] && echo -e "${Error} ShadowsocksR服务端 下载失败 !"
+  else
+    wget -N --no-check-certificate "https://github.com/jumploop/shadowsocksr/archive/manyuser.zip"
+    [[ ! -e "manyuser.zip" ]] && echo -e "${Error} ShadowsocksR服务端 压缩包 下载失败 !" && rm -rf manyuser.zip && exit 1
+    unzip "manyuser.zip"
+    [[ ! -e "/usr/local/shadowsocksr-manyuser/" ]] && echo -e "${Error} ShadowsocksR服务端 解压失败 !" && rm -rf manyuser.zip && exit 1
+    mv "/usr/local/shadowsocksr-manyuser/" "/usr/local/shadowsocksr/"
+    [[ ! -e "/usr/local/shadowsocksr/" ]] && echo -e "${Error} ShadowsocksR服务端 重命名失败 !" && rm -rf manyuser.zip && rm -rf "/usr/local/shadowsocksr-manyuser/" && exit 1
+    rm -rf manyuser.zip
+  fi
   [[ -e ${config_folder} ]] && rm -rf ${config_folder}
   mkdir ${config_folder}
   [[ ! -e ${config_folder} ]] && echo -e "${Error} ShadowsocksR配置文件的文件夹 建立失败 !" && exit 1
@@ -744,10 +747,20 @@ Install_SSR() {
 }
 Update_SSR() {
   SSR_installation_status
-  echo -e "因破娃暂停更新ShadowsocksR服务端，所以此功能临时禁用。"
-  #cd ${ssr_folder}
-  #git pull
-  #Restart_SSR
+  cd ${ssr_folder} || exit
+  # echo -e "因破娃暂停更新ShadowsocksR服务端，所以此功能临时禁用。"
+  if git pull; then
+    echo -e "${Error} ShadowsocksR服务端 更新成功!"
+  else
+    wget -N --no-check-certificate "https://github.com/jumploop/shadowsocksr/archive/manyuser.zip"
+    [[ ! -e "manyuser.zip" ]] && echo -e "${Error} ShadowsocksR服务端 更新失败，请检查 !" && rm -rf manyuser.zip && exit 1
+    unzip "manyuser.zip"
+    [[ ! -e "/usr/local/shadowsocksr-manyuser/" ]] && echo -e "${Error} ShadowsocksR服务端 解压失败 !" && rm -rf manyuser.zip && exit 1
+    cp -rf "/usr/local/shadowsocksr-manyuser/*" "/usr/local/shadowsocksr/"
+    echo -e "${Info} ShadowsocksR服务端 更新成功!"
+    rm -rf manyuser.zip && rm -rf "/usr/local/shadowsocksr-manyuser/"
+  fi
+  Restart_SSR
 }
 Uninstall_SSR() {
   [[ ! -e ${config_user_file} ]] && [[ ! -e ${ssr_folder} ]] && echo -e "${Error} 没有安装 ShadowsocksR，请检查 !" && exit 1
