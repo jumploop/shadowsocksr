@@ -294,7 +294,7 @@ def get_config(is_local):
     else:
         level = logging.INFO
     verbose = config['verbose']
-    logging.basicConfig(filename=log_path, level=level, format=format, datefmt='%Y-%m-%d %H:%M:%S')
+    logging.basicConfig(filename=log_path, level=level, format=log_format, datefmt='%Y-%m-%d %H:%M:%S')
     check_config(config, is_local)
 
     return config
@@ -466,6 +466,5 @@ def remove_comment(json):
 
 
 def parse_json_in_str(data):
-    logging.info('data is %s', data)
     # parse json and convert everything from unicode to str
     return json.loads(data, object_hook=_decode_dict)
