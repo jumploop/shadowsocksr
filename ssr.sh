@@ -749,17 +749,13 @@ Update_SSR() {
   SSR_installation_status
   cd ${ssr_folder} || exit
   # echo -e "因破娃暂停更新ShadowsocksR服务端，所以此功能临时禁用。"
-  if git pull; then
-    echo -e "${Info} ShadowsocksR服务端 更新成功!"
-  else
-    wget -N --no-check-certificate "https://github.com/jumploop/shadowsocksr/archive/manyuser.zip"
-    [[ ! -e "manyuser.zip" ]] && echo -e "${Error} ShadowsocksR服务端 更新失败，请检查 !" && rm -rf manyuser.zip && exit 1
-    unzip "manyuser.zip"
-    [[ ! -e "${ssr_folder}/shadowsocksr-manyuser/" ]] && echo -e "${Error} ShadowsocksR服务端 解压失败 !" && rm -rf manyuser.zip && exit 1
-    cp -rf "${ssr_folder}/shadowsocksr-manyuser/*" "/usr/local/shadowsocksr/"
-    echo -e "${Info} ShadowsocksR服务端 更新成功!"
-    rm -rf manyuser.zip && rm -rf "${ssr_folder}/shadowsocksr-manyuser/"
-  fi
+  wget -N --no-check-certificate "https://github.com/jumploop/shadowsocksr/archive/manyuser.zip"
+  [[ ! -e "manyuser.zip" ]] && echo -e "${Error} ShadowsocksR服务端 更新失败，请检查 !" && rm -rf manyuser.zip && exit 1
+  unzip "manyuser.zip"
+  [[ ! -e "${ssr_folder}/shadowsocksr-manyuser/" ]] && echo -e "${Error} ShadowsocksR服务端 解压失败 !" && rm -rf manyuser.zip && exit 1
+  cp -rf "${ssr_folder}/shadowsocksr-manyuser/*" "/usr/local/shadowsocksr/"
+  echo -e "${Info} ShadowsocksR服务端 更新成功!"
+  rm -rf manyuser.zip && rm -rf "${ssr_folder}/shadowsocksr-manyuser/"
   JQ_install
   Restart_SSR
 }
