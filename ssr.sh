@@ -590,7 +590,7 @@ Check_python() {
 }
 Centos_yum() {
   yum update -y
-
+  yum install -y bash-completion
   if grep "7\..*" /etc/redhat-release | grep -i centos >/dev/null; then
     yum install -y vim unzip net-tools
   else
@@ -599,7 +599,7 @@ Centos_yum() {
 }
 Debian_apt() {
   apt-get update
-
+  apt-get install -y bash-completion
   if grep "9\..*" /etc/issue >/dev/null; then
     apt-get install -y vim unzip net-tools
   else
