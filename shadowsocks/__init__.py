@@ -16,3 +16,10 @@
 
 from __future__ import absolute_import, division, print_function, \
     with_statement
+
+import logging
+
+log_path = '/var/log/ssserver.log'
+log_format = '%(asctime)s %(levelname)-8s %(filename)s:%(lineno)s %(message)s'
+
+logging.basicConfig(filename=log_path, level=logging.INFO, format=log_format, datefmt='%Y-%m-%d %H:%M:%S')

@@ -24,13 +24,11 @@ import sys
 import getopt
 import logging
 from shadowsocks.common import to_bytes, to_str, IPNetwork, PortRange
-from shadowsocks import encrypt
+from shadowsocks import encrypt, log_path, log_format
 
 VERBOSE_LEVEL = 5
 
 verbose = 0
-log_path = '/var/log/ssserver.log'
-format = '%(asctime)s %(levelname)-8s %(filename)s:%(lineno)s %(message)s'
 
 
 def check_python():
@@ -139,7 +137,7 @@ def get_config(is_local):
     global verbose
     config = {}
     config_path = None
-    logging.basicConfig(filename=log_path, level=logging.INFO, format=format, datefmt='%Y-%m-%d %H:%M:%S')
+    logging.basicConfig(filename=log_path, level=logging.INFO, format=log_format, datefmt='%Y-%m-%d %H:%M:%S')
     if is_local:
         shortopts = 'hd:s:b:p:k:l:m:O:o:G:g:c:t:vq'
         longopts = ['help', 'fast-open', 'pid-file=', 'log-file=', 'user=',
