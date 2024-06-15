@@ -80,10 +80,9 @@ class Manager(object):
         port = int(config['server_port'])
         servers = self._relays.get(port, None)
         if servers:
-            logging.error("server already exists at %s:%d" % (config['server'],
-                                                              port))
+            logging.error("server already exists at %s:%d", config['server'], port)
             return
-        logging.info("adding server at %s:%d" % (config['server'], port))
+        logging.info("adding server at %s:%d", config['server'], port)
         t = tcprelay.TCPRelay(config, self._dns_resolver, False,
                               stat_callback=self.stat_callback)
         u = udprelay.UDPRelay(config, self._dns_resolver, False,
@@ -96,14 +95,13 @@ class Manager(object):
         port = int(config['server_port'])
         servers = self._relays.get(port, None)
         if servers:
-            logging.info("removing server at %s:%d" % (config['server'], port))
+            logging.info("removing server at %s:%d", config['server'], port)
             t, u = servers
             t.close(next_tick=False)
             u.close(next_tick=False)
             del self._relays[port]
         else:
-            logging.error("server not exist at %s:%d" % (config['server'],
-                                                         port))
+            logging.error("server not exist at %s:%d", config['server'], port)
 
     def handle_event(self, sock, fd, event):
         if sock == self._control_socket and event == eventloop.POLL_IN:

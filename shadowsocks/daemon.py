@@ -73,7 +73,7 @@ def write_pid_file(pid_file, pid):
     except IOError:
         r = os.read(fd, 32)
         if r:
-            logging.error('already started at pid %s' % common.to_str(r))
+            logging.error('already started at pid %s', common.to_str(r))
         else:
             logging.error('already started')
         os.close(fd)
@@ -186,7 +186,7 @@ def set_user(username):
     try:
         pwrec = pwd.getpwnam(username)
     except KeyError:
-        logging.error('user not found: %s' % username)
+        logging.error('user not found: %s', username)
         raise
     user = pwrec[0]
     uid = pwrec[2]

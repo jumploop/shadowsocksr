@@ -252,7 +252,7 @@ def parse_header(data):
             logging.warning('header is too short')
     else:
         logging.warning('unsupported addrtype %d, maybe wrong password or '
-                        'encryption method' % addrtype)
+                        'encryption method', addrtype)
     if dest_addr is None:
         return None
     return connecttype, addrtype, to_bytes(dest_addr), dest_port, header_length
@@ -288,7 +288,7 @@ class IPNetwork(object):
                 ip >>= 1
                 prefix_size += 1
             logging.warning("You did't specify CIDR routing prefix size for %s, "
-                            "implicit treated as %s/%d" % (addr, addr, addr_len))
+                            "implicit treated as %s/%d", addr, addr, addr_len)
         elif block[1].isdigit() and int(block[1]) <= addr_len:
             prefix_size = addr_len - int(block[1])
             ip >>= prefix_size
@@ -381,13 +381,13 @@ class UDPAsyncDNSHandler(object):
 
     def _handle_dns_resolved(self, result, error):
         if error:
-            logging.error("%s when resolve DNS" % (error,))  # drop
+            logging.error("%s when resolve DNS", error)  # drop
             return self.call_back(error, self.remote_addr, None, self.params)
         if result:
             ip = result[1]
             if ip:
                 return self.call_back("", self.remote_addr, ip, self.params)
-        logging.warning("can't resolve %s" % (self.remote_addr,))
+        logging.warning("can't resolve %s", self.remote_addr)
         return self.call_back("fail to resolve", self.remote_addr, None, self.params)
 
 

@@ -15,8 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from __future__ import absolute_import, division, print_function, \
-    with_statement
+from __future__ import absolute_import, division, print_function, with_statement
 
 import time
 import socket
@@ -137,8 +136,9 @@ class NoAcceptableMethods(Exception):
 
 
 class TCPRelayHandler(object):
-    def __init__(self, server, fd_to_handlers, loop, local_sock, config,
-                 dns_resolver, is_local):
+    def __init__(
+            self, server, fd_to_handlers, loop, local_sock, config, dns_resolver, is_local
+    ):
         self._server = server
         self._fd_to_handlers = fd_to_handlers
         self._loop = loop
@@ -167,7 +167,9 @@ class TCPRelayHandler(object):
         self._encrypt_correct = True
         self._obfs = obfs.obfs(config['obfs'])
         self._protocol = obfs.obfs(config['protocol'])
-        self._overhead = self._obfs.get_overhead(self._is_local) + self._protocol.get_overhead(self._is_local)
+        self._overhead = self._obfs.get_overhead(
+            self._is_local
+        ) + self._protocol.get_overhead(self._is_local)
         self._recv_buffer_size = BUF_SIZE - self._overhead
 
         server_info = obfs.server_info(server.obfs_data)
@@ -272,14 +274,18 @@ class TCPRelayHandler(object):
             tcp_mss = local_sock.getsockopt(socket.SOL_TCP, socket.TCP_MAXSEG)
             if tcp_mss > 500 and tcp_mss <= 1500:
                 self._tcp_mss = tcp_mss
-            logging.debug("TCP MSS = %d" % (self._tcp_mss,))
+            logging.debug(
+                "TCP MSS = %d",
+                self._tcp_mss,
+            )
         except:
             pass
 
     def _create_encryptor(self, config):
         try:
-            self._encryptor = encrypt.Encryptor(config['password'],
-                                                config['method'], None, True)
+            self._encryptor = encrypt.Encryptor(
+                config['password'], config['method'], None, True
+            )
             return True
         except Exception:
             self._stage = STAGE_DESTROYED
@@ -353,37 +359,53 @@ class TCPRelayHandler(object):
 
                     frag = common.ord(data[2])
                     if frag != 0:
-                        logging.warning('drop a message since frag is %d' % (frag,))
+                        logging.warning(
+                            'drop a message since frag is %d',
+                            frag,
+                        )
                         continue
                     else:
                         data = data[3:]
                     header_result = parse_header(data)
                     if header_result is None:
                         continue
-                    connecttype, addrtype, dest_addr, dest_port, header_length = header_result
+                    connecttype, addrtype, dest_addr, dest_port, header_length = (
+                        header_result
+                    )
                     if (addrtype & 7) == 3:
                         af = common.is_ip(dest_addr)
                         if af == False:
                             handler = common.UDPAsyncDNSHandler(data[header_length:])
-                            handler.resolve(self._dns_resolver, (dest_addr, dest_port),
-                                            self._handle_server_dns_resolved)
+                            handler.resolve(
+                                self._dns_resolver,
+                                (dest_addr, dest_port),
+                                self._handle_server_dns_resolved,
+                            )
                         else:
-                            return self._handle_server_dns_resolved("", (dest_addr, dest_port), dest_addr,
-                                                                    data[header_length:])
+                            return self._handle_server_dns_resolved(
+                                "",
+                                (dest_addr, dest_port),
+                                dest_addr,
+                                data[header_length:],
+                            )
                     else:
-                        return self._handle_server_dns_resolved("", (dest_addr, dest_port), dest_addr,
-                                                                data[header_length:])
+                        return self._handle_server_dns_resolved(
+                            "", (dest_addr, dest_port), dest_addr, data[header_length:]
+                        )
 
             except Exception as e:
                 # trace = traceback.format_exc()
                 # logging.error(trace)
                 error_no = eventloop.errno_from_exception(e)
-                if error_no in (errno.EAGAIN, errno.EINPROGRESS,
-                                errno.EWOULDBLOCK):
+                if error_no in (errno.EAGAIN, errno.EINPROGRESS, errno.EWOULDBLOCK):
                     uncomplete = True
                 else:
                     shell.print_exception(e)
-                    logging.error("exception from %s:%d" % (self._client_address[0], self._client_address[1]))
+                    logging.error(
+                        "exception from %s:%d",
+                        self._client_address[0],
+                        self._client_address[1],
+                    )
                     self.destroy()
                     return False
             return True
@@ -403,18 +425,25 @@ class TCPRelayHandler(object):
                     return
             except (OSError, IOError) as e:
                 error_no = eventloop.errno_from_exception(e)
-                if error_no in (errno.EAGAIN, errno.EINPROGRESS,
-                                errno.EWOULDBLOCK):
+                if error_no in (errno.EAGAIN, errno.EINPROGRESS, errno.EWOULDBLOCK):
                     uncomplete = True
                 else:
                     # traceback.print_exc()
                     shell.print_exception(e)
-                    logging.error("exception from %s:%d" % (self._client_address[0], self._client_address[1]))
+                    logging.error(
+                        "exception from %s:%d",
+                        self._client_address[0],
+                        self._client_address[1],
+                    )
                     self.destroy()
                     return False
             except Exception as e:
                 shell.print_exception(e)
-                logging.error("exception from %s:%d" % (self._client_address[0], self._client_address[1]))
+                logging.error(
+                    "exception from %s:%d",
+                    self._client_address[0],
+                    self._client_address[1],
+                )
                 self.destroy()
                 return False
         if uncomplete:
@@ -426,7 +455,10 @@ class TCPRelayHandler(object):
                 self._update_stream(STREAM_UP, WAIT_STATUS_WRITING)
             else:
                 logging.error(
-                    'write_all_to_sock:unknown socket from %s:%d' % (self._client_address[0], self._client_address[1]))
+                    'write_all_to_sock:unknown socket from %s:%d',
+                    self._client_address[0],
+                    self._client_address[1],
+                )
         else:
             if sock == self._local_sock:
                 self._update_stream(STREAM_DOWN, WAIT_STATUS_READING)
@@ -434,14 +466,19 @@ class TCPRelayHandler(object):
                 self._update_stream(STREAM_UP, WAIT_STATUS_READING)
             else:
                 logging.error(
-                    'write_all_to_sock:unknown socket from %s:%d' % (self._client_address[0], self._client_address[1]))
+                    'write_all_to_sock:unknown socket from %s:%d',
+                    self._client_address[0],
+                    self._client_address[1],
+                )
         return True
 
     def _handle_server_dns_resolved(self, error, remote_addr, server_addr, data):
         if error:
             return
         try:
-            addrs = socket.getaddrinfo(server_addr, remote_addr[1], 0, socket.SOCK_DGRAM, socket.SOL_UDP)
+            addrs = socket.getaddrinfo(
+                server_addr, remote_addr[1], 0, socket.SOCK_DGRAM, socket.SOL_UDP
+            )
             if not addrs:  # drop
                 return
             af, socktype, proto, canonname, sa = addrs[0]
@@ -449,22 +486,36 @@ class TCPRelayHandler(object):
                 self._remote_sock_v6.sendto(data, (server_addr, remote_addr[1]))
                 if self._udpv6_send_pack_id == 0:
                     addr, port = self._remote_sock_v6.getsockname()[:2]
-                    common.connect_log('UDPv6 sendto %s(%s):%d from %s:%d by user %d' %
-                                       (common.to_str(remote_addr[0]), common.to_str(server_addr), remote_addr[1], addr,
-                                        port, self._user_id))
+                    common.connect_log(
+                        'UDPv6 sendto %s(%s):%d from %s:%d by user %d',
+                        common.to_str(remote_addr[0]),
+                        common.to_str(server_addr),
+                        remote_addr[1],
+                        addr,
+                        port,
+                        self._user_id,
+                    )
                 self._udpv6_send_pack_id += 1
             else:
                 self._remote_sock.sendto(data, (server_addr, remote_addr[1]))
                 if self._udp_send_pack_id == 0:
                     addr, port = self._remote_sock.getsockname()[:2]
-                    common.connect_log('UDP sendto %s(%s):%d from %s:%d by user %d' %
-                                       (common.to_str(remote_addr[0]), common.to_str(server_addr), remote_addr[1], addr,
-                                        port, self._user_id))
+                    common.connect_log(
+                        'UDP sendto %s(%s):%d from %s:%d by user %d',
+                        common.to_str(remote_addr[0]),
+                        common.to_str(server_addr),
+                        remote_addr[1],
+                        addr,
+                        port,
+                        self._user_id,
+                    )
                 self._udp_send_pack_id += 1
             return True
         except Exception as e:
             shell.print_exception(e)
-            logging.error("exception from %s:%d" % (self._client_address[0], self._client_address[1]))
+            logging.error(
+                "exception from %s:%d", self._client_address[0], self._client_address[1]
+            )
 
     def _get_redirect_host(self, client_address, ogn_data):
         host_list = self._redir_list or ["*#0.0.0.0:0"]
@@ -475,7 +526,13 @@ class TCPRelayHandler(object):
         items_sum = common.to_str(host_list[0]).rsplit('#', 1)
         if len(items_sum) < 2:
             hash_code = binascii.crc32(ogn_data)
-            addrs = socket.getaddrinfo(client_address[0], client_address[1], 0, socket.SOCK_STREAM, socket.SOL_TCP)
+            addrs = socket.getaddrinfo(
+                client_address[0],
+                client_address[1],
+                0,
+                socket.SOCK_STREAM,
+                socket.SOL_TCP,
+            )
             af, socktype, proto, canonname, sa = addrs[0]
             address_bytes = common.inet_pton(af, sa[0])
             if af == socket.AF_INET6:
@@ -507,7 +564,7 @@ class TCPRelayHandler(object):
                     if host[1] == self._server._listen_port:
                         host_port.append(host)
 
-            return host_port[((hash_code & 0xffffffff) + addr) % len(host_port)]
+            return host_port[((hash_code & 0xFFFFFFFF) + addr) % len(host_port)]
 
         else:
             for host in host_list:
@@ -517,13 +574,18 @@ class TCPRelayHandler(object):
                 if len(items_match) > 1:
                     if items_match[1] != "*":
                         try:
-                            if self._server._listen_port != int(items_match[1]) and int(items_match[1]) != 0:
+                            if (
+                                    self._server._listen_port != int(items_match[1])
+                                    and int(items_match[1]) != 0
+                            ):
                                 continue
                         except:
                             pass
 
-                if items_match[0] != "*" and common.match_regex(
-                        items_match[0], ogn_data) == False:
+                if (
+                        items_match[0] != "*"
+                        and common.match_regex(items_match[0], ogn_data) == False
+                ):
                     continue
                 if len(items) > 1:
                     try:
@@ -537,16 +599,27 @@ class TCPRelayHandler(object):
             return ("0.0.0.0", 0)
 
     def _handel_protocol_error(self, client_address, ogn_data):
-        logging.warning("Protocol ERROR, TCP ogn data %s from %s:%d via port %d by UID %d" % (
-            binascii.hexlify(ogn_data), client_address[0], client_address[1], self._server._listen_port, self._user_id))
+        logging.warning(
+            "Protocol ERROR, TCP ogn data %s from %s:%d via port %d by UID %d",
+            binascii.hexlify(ogn_data),
+            client_address[0],
+            client_address[1],
+            self._server._listen_port,
+            self._user_id,
+        )
         self._encrypt_correct = False
         # create redirect or disconnect by hash code
         host, port = self._get_redirect_host(client_address, ogn_data)
         if port == 0:
             raise Exception('can not parse header')
-        data = b"\x03" + common.to_bytes(common.chr(len(host))) + common.to_bytes(host) + struct.pack('>H', port)
+        data = (
+                b"\x03"
+                + common.to_bytes(common.chr(len(host)))
+                + common.to_bytes(host)
+                + struct.pack('>H', port)
+        )
         self._is_redirect = True
-        logging.warning("TCP data redir %s:%d %s" % (host, port, binascii.hexlify(data)))
+        logging.warning("TCP data redir %s:%d %s", host, port, binascii.hexlify(data))
         return data + ogn_data
 
     def _handle_stage_connecting(self, data):
@@ -557,16 +630,19 @@ class TCPRelayHandler(object):
                 data = self._obfs.client_encode(data)
         if data:
             self._data_to_write_to_remote.append(data)
-        if self._is_local and not self._fastopen_connected and \
-                self._config['fast_open']:
+        if (
+                self._is_local
+                and not self._fastopen_connected
+                and self._config['fast_open']
+        ):
             # for sslocal and fastopen, we basically wait for data and use
             # sendto to connect
             try:
                 # only connect once
                 self._fastopen_connected = True
-                remote_sock = \
-                    self._create_remote_socket(self._chosen_server[0],
-                                               self._chosen_server[1])
+                remote_sock = self._create_remote_socket(
+                    self._chosen_server[0], self._chosen_server[1]
+                )
                 self._loop.add(remote_sock, eventloop.POLL_ERR, self._server)
                 data = b''.join(self._data_to_write_to_remote)
                 l = len(data)
@@ -589,7 +665,11 @@ class TCPRelayHandler(object):
                     shell.print_exception(e)
                     if self._config['verbose']:
                         traceback.print_exc()
-                    logging.error("exception from %s:%d" % (self._client_address[0], self._client_address[1]))
+                    logging.error(
+                        "exception from %s:%d",
+                        self._client_address[0],
+                        self._client_address[1],
+                    )
                     self.destroy()
 
     def _get_head_size(self, buf, def_value):
@@ -615,11 +695,11 @@ class TCPRelayHandler(object):
                     else:
                         header = b'\x05\x00\x00\x01'
                     addr, port = self._local_sock.getsockname()[:2]
-                    addr_to_send = socket.inet_pton(self._local_sock.family,
-                                                    addr)
+                    addr_to_send = socket.inet_pton(self._local_sock.family, addr)
                     port_to_send = struct.pack('>H', port)
-                    self._write_to_sock(header + addr_to_send + port_to_send,
-                                        self._local_sock)
+                    self._write_to_sock(
+                        header + addr_to_send + port_to_send, self._local_sock
+                    )
                     self._stage = STAGE_UDP_ASSOC
                     # just wait for the client to disconnect
                     return
@@ -648,30 +728,38 @@ class TCPRelayHandler(object):
                     data = self._handel_protocol_error(self._client_address, ogn_data)
                     logging.info('_handel_protocol_error data is %s', data)
                     header_result = parse_header(data)
-                self._overhead = self._obfs.get_overhead(self._is_local) + self._protocol.get_overhead(self._is_local)
+                self._overhead = self._obfs.get_overhead(
+                    self._is_local
+                ) + self._protocol.get_overhead(self._is_local)
                 self._recv_buffer_size = BUF_SIZE - self._overhead
                 server_info = self._obfs.get_server_info()
                 server_info.buffer_size = self._recv_buffer_size
                 server_info = self._protocol.get_server_info()
                 server_info.buffer_size = self._recv_buffer_size
-            connecttype, addrtype, remote_addr, remote_port, header_length = header_result
+            connecttype, addrtype, remote_addr, remote_port, header_length = (
+                header_result
+            )
             if connecttype != 0:
                 pass
                 # common.connect_log('UDP over TCP by user %d' %
                 #        (self._user_id, ))
             else:
-                common.connect_log('TCP request %s:%d by user %d' %
-                                   (common.to_str(remote_addr), remote_port, self._user_id))
+                common.connect_log(
+                    'TCP request %s:%d by user %d',
+                    common.to_str(remote_addr),
+                    remote_port,
+                    self._user_id,
+                )
             self._remote_address = (common.to_str(remote_addr), remote_port)
-            self._remote_udp = (connecttype != 0)
+            self._remote_udp = connecttype != 0
             # pause reading
             self._update_stream(STREAM_UP, WAIT_STATUS_WRITING)
             self._stage = STAGE_DNS
             if self._is_local:
                 # forward address to remote
-                self._write_to_sock((b'\x05\x00\x00\x01'
-                                     b'\x00\x00\x00\x00\x10\x10'),
-                                    self._local_sock)
+                self._write_to_sock(
+                    (b'\x05\x00\x00\x01' b'\x00\x00\x00\x00\x10\x10'), self._local_sock
+                )
                 head_len = self._get_head_size(data, 30)
                 self._obfs.obfs.server_info.head_len = head_len
                 self._protocol.obfs.server_info.head_len = head_len
@@ -682,14 +770,14 @@ class TCPRelayHandler(object):
                 if data_to_send:
                     self._data_to_write_to_remote.append(data_to_send)
                 # notice here may go into _handle_dns_resolved directly
-                self._dns_resolver.resolve(self._chosen_server[0],
-                                           self._handle_dns_resolved)
+                self._dns_resolver.resolve(
+                    self._chosen_server[0], self._handle_dns_resolved
+                )
             else:
                 if len(data) > header_length:
                     self._data_to_write_to_remote.append(data[header_length:])
                 # notice here may go into _handle_dns_resolved directly
-                self._dns_resolver.resolve(remote_addr,
-                                           self._handle_dns_resolved)
+                self._dns_resolver.resolve(remote_addr, self._handle_dns_resolved)
         except Exception as e:
             self._log_error(e)
             if self._config['verbose']:
@@ -709,18 +797,28 @@ class TCPRelayHandler(object):
         if bind_addr in self._ignore_bind_list:
             bind_addr = None
         if bind_addr:
-            local_addrs = socket.getaddrinfo(bind_addr, 0, 0, socket.SOCK_STREAM, socket.SOL_TCP)
+            local_addrs = socket.getaddrinfo(
+                bind_addr, 0, 0, socket.SOCK_STREAM, socket.SOL_TCP
+            )
             if local_addrs[0][0] == af:
-                logging.debug("bind %s" % (bind_addr,))
+                logging.debug(
+                    "bind %s",
+                    bind_addr,
+                )
                 try:
                     sock.bind((bind_addr, 0))
                 except Exception as e:
-                    logging.warning("bind %s fail" % (bind_addr,))
+                    logging.warning(
+                        "bind %s fail",
+                        bind_addr,
+                    )
 
     def _create_remote_socket(self, ip, port):
         if self._remote_udp:
             addrs_v6 = socket.getaddrinfo("::", 0, 0, socket.SOCK_DGRAM, socket.SOL_UDP)
-            addrs = socket.getaddrinfo("0.0.0.0", 0, 0, socket.SOCK_DGRAM, socket.SOL_UDP)
+            addrs = socket.getaddrinfo(
+                "0.0.0.0", 0, 0, socket.SOCK_DGRAM, socket.SOL_UDP
+            )
         else:
             addrs = socket.getaddrinfo(ip, port, 0, socket.SOCK_STREAM, socket.SOL_TCP)
         if len(addrs) == 0:
@@ -730,17 +828,32 @@ class TCPRelayHandler(object):
             if self._forbidden_iplist:
                 if common.to_str(sa[0]) in self._forbidden_iplist:
                     if self._remote_address:
-                        raise Exception('IP %s is in forbidden list, when connect to %s:%d via port %d by UID %d' %
-                                        (common.to_str(sa[0]), self._remote_address[0], self._remote_address[1],
-                                         self._server._listen_port, self._user_id))
-                    raise Exception('IP %s is in forbidden list, reject' %
-                                    common.to_str(sa[0]))
+                        raise Exception(
+                            'IP %s is in forbidden list, when connect to %s:%d via port %d by UID %d'
+                            % (
+                                common.to_str(sa[0]),
+                                self._remote_address[0],
+                                self._remote_address[1],
+                                self._server._listen_port,
+                                self._user_id,
+                            )
+                        )
+                    raise Exception(
+                        'IP %s is in forbidden list, reject' % common.to_str(sa[0])
+                    )
             if self._forbidden_portset:
                 if sa[1] in self._forbidden_portset:
                     if self._remote_address:
-                        raise Exception('Port %d is in forbidden list, when connect to %s:%d via port %d by UID %d' %
-                                        (sa[1], self._remote_address[0], self._remote_address[1],
-                                         self._server._listen_port, self._user_id))
+                        raise Exception(
+                            'Port %d is in forbidden list, when connect to %s:%d via port %d by UID %d'
+                            % (
+                                sa[1],
+                                self._remote_address[0],
+                                self._remote_address[1],
+                                self._server._listen_port,
+                                self._user_id,
+                            )
+                        )
                     raise Exception('Port %d is in forbidden list, reject' % sa[1])
         remote_sock = socket.socket(af, socktype, proto)
         self._remote_sock = remote_sock
@@ -793,33 +906,44 @@ class TCPRelayHandler(object):
                         # TODO when there is already data in this packet
                     else:
                         # else do connect
-                        remote_sock = self._create_remote_socket(remote_addr,
-                                                                 remote_port)
+                        remote_sock = self._create_remote_socket(
+                            remote_addr, remote_port
+                        )
                         if self._remote_udp:
-                            self._loop.add(remote_sock,
-                                           eventloop.POLL_IN,
-                                           self._server)
+                            self._loop.add(remote_sock, eventloop.POLL_IN, self._server)
                             if self._remote_sock_v6:
-                                self._loop.add(self._remote_sock_v6,
-                                               eventloop.POLL_IN,
-                                               self._server)
+                                self._loop.add(
+                                    self._remote_sock_v6,
+                                    eventloop.POLL_IN,
+                                    self._server,
+                                )
                         else:
                             try:
                                 remote_sock.connect((remote_addr, remote_port))
                             except (OSError, IOError) as e:
-                                if eventloop.errno_from_exception(e) in (errno.EINPROGRESS,
-                                                                         errno.EWOULDBLOCK):
+                                if eventloop.errno_from_exception(e) in (
+                                        errno.EINPROGRESS,
+                                        errno.EWOULDBLOCK,
+                                ):
                                     pass  # always goto here
                                 else:
                                     raise e
                             addr, port = self._remote_sock.getsockname()[:2]
-                            common.connect_log('TCP connecting %s(%s):%d from %s:%d by user %d' %
-                                               (common.to_str(self._remote_address[0]), common.to_str(remote_addr),
-                                                remote_port, addr, port, self._user_id))
+                            common.connect_log(
+                                'TCP connecting %s(%s):%d from %s:%d by user %d',
+                                common.to_str(self._remote_address[0]),
+                                common.to_str(remote_addr),
+                                remote_port,
+                                addr,
+                                port,
+                                self._user_id,
+                            )
 
-                            self._loop.add(remote_sock,
-                                           eventloop.POLL_ERR | eventloop.POLL_OUT,
-                                           self._server)
+                            self._loop.add(
+                                remote_sock,
+                                eventloop.POLL_ERR | eventloop.POLL_OUT,
+                                self._server,
+                            )
                         self._stage = STAGE_CONNECTING
                         self._update_stream(STREAM_UP, WAIT_STATUS_READWRITING)
                         self._update_stream(STREAM_DOWN, WAIT_STATUS_READING)
@@ -833,7 +957,11 @@ class TCPRelayHandler(object):
                     shell.print_exception(e)
                     if self._config['verbose']:
                         traceback.print_exc()
-                    logging.error("exception from %s:%d" % (self._client_address[0], self._client_address[1]))
+                    logging.error(
+                        "exception from %s:%d",
+                        self._client_address[0],
+                        self._client_address[1],
+                    )
         self.destroy()
 
     def _get_read_size(self, sock, recv_buffer_size, up):
@@ -861,8 +989,7 @@ class TCPRelayHandler(object):
         socks_version = common.ord(data[0])
         nmethods = common.ord(data[1])
         if socks_version != 5:
-            logging.warning('unsupported SOCKS protocol version ' +
-                            str(socks_version))
+            logging.warning('unsupported SOCKS protocol version %s', str(socks_version))
             raise BadSocksHeader
         if nmethods < 1 or len(data) != nmethods + 2:
             logging.warning('NMETHODS and number of METHODS mismatch')
@@ -873,8 +1000,9 @@ class TCPRelayHandler(object):
                 noauth_exist = True
                 break
         if not noauth_exist:
-            logging.warning('none of SOCKS METHOD\'s '
-                            'requested by client is supported')
+            logging.warning(
+                'none of SOCKS METHOD\'s ' 'requested by client is supported'
+            )
             raise NoAcceptableMethods
 
     def _handle_stage_init(self, data):
@@ -897,15 +1025,20 @@ class TCPRelayHandler(object):
             return
         is_local = self._is_local
         if is_local:
-            recv_buffer_size = self._get_read_size(self._local_sock, self._recv_buffer_size, True)
+            recv_buffer_size = self._get_read_size(
+                self._local_sock, self._recv_buffer_size, True
+            )
         else:
             recv_buffer_size = BUF_SIZE
         data = None
         try:
             data = self._local_sock.recv(recv_buffer_size)
         except (OSError, IOError) as e:
-            if eventloop.errno_from_exception(e) in \
-                    (errno.ETIMEDOUT, errno.EAGAIN, errno.EWOULDBLOCK):
+            if eventloop.errno_from_exception(e) in (
+                    errno.ETIMEDOUT,
+                    errno.EAGAIN,
+                    errno.EWOULDBLOCK,
+            ):
                 return
         if not data:
             self.destroy()
@@ -920,13 +1053,18 @@ class TCPRelayHandler(object):
                     try:
                         obfs_decode = self._obfs.server_decode(data)
                         if self._stage == STAGE_INIT:
-                            self._overhead = self._obfs.get_overhead(self._is_local) + self._protocol.get_overhead(
-                                self._is_local)
+                            self._overhead = self._obfs.get_overhead(
+                                self._is_local
+                            ) + self._protocol.get_overhead(self._is_local)
                             server_info = self._protocol.get_server_info()
                             server_info.overhead = self._overhead
                     except Exception as e:
                         shell.print_exception(e)
-                        logging.error("exception from %s:%d" % (self._client_address[0], self._client_address[1]))
+                        logging.error(
+                            "exception from %s:%d",
+                            self._client_address[0],
+                            self._client_address[1],
+                        )
                         self.destroy()
                         return
                     if obfs_decode[2]:
@@ -937,13 +1075,19 @@ class TCPRelayHandler(object):
                             shell.print_exception(e)
                             if self._config['verbose']:
                                 traceback.print_exc()
-                            logging.error("exception from %s:%d" % (self._client_address[0], self._client_address[1]))
+                            logging.error(
+                                "exception from %s:%d",
+                                self._client_address[0],
+                                self._client_address[1],
+                            )
                             self.destroy()
                             return
                     if obfs_decode[1]:
                         if not self._protocol.obfs.server_info.recv_iv:
                             iv_len = len(self._protocol.obfs.server_info.iv)
-                            self._protocol.obfs.server_info.recv_iv = obfs_decode[0][:iv_len]
+                            self._protocol.obfs.server_info.recv_iv = obfs_decode[0][
+                                                                      :iv_len
+                                                                      ]
                         data = self._encryptor.decrypt(obfs_decode[0])
                     else:
                         data = obfs_decode[0]
@@ -960,12 +1104,19 @@ class TCPRelayHandler(object):
                                 if self._config['verbose']:
                                     traceback.print_exc()
                                 logging.error(
-                                    "exception from %s:%d" % (self._client_address[0], self._client_address[1]))
+                                    "exception from %s:%d",
+                                    self._client_address[0],
+                                    self._client_address[1],
+                                )
                                 self.destroy()
                                 return
                     except Exception as e:
                         shell.print_exception(e)
-                        logging.error("exception from %s:%d" % (self._client_address[0], self._client_address[1]))
+                        logging.error(
+                            "exception from %s:%d",
+                            self._client_address[0],
+                            self._client_address[1],
+                        )
                         self.destroy()
                         return
             else:
@@ -983,8 +1134,9 @@ class TCPRelayHandler(object):
             self._handle_stage_init(data)
         elif self._stage == STAGE_CONNECTING:
             self._handle_stage_connecting(data)
-        elif (is_local and self._stage == STAGE_ADDR) or \
-                (not is_local and self._stage == STAGE_INIT):
+        elif (is_local and self._stage == STAGE_ADDR) or (
+                not is_local and self._stage == STAGE_INIT
+        ):
             self._handle_stage_addr(ogn_data, data)
 
     def _on_remote_read(self, is_remote_sock):
@@ -1010,12 +1162,18 @@ class TCPRelayHandler(object):
                 if self._is_local:
                     recv_buffer_size = BUF_SIZE
                 else:
-                    recv_buffer_size = self._get_read_size(self._remote_sock, self._recv_buffer_size, False)
+                    recv_buffer_size = self._get_read_size(
+                        self._remote_sock, self._recv_buffer_size, False
+                    )
                 data = self._remote_sock.recv(recv_buffer_size)
                 self._recv_pack_id += 1
         except (OSError, IOError) as e:
-            if eventloop.errno_from_exception(e) in \
-                    (errno.ETIMEDOUT, errno.EAGAIN, errno.EWOULDBLOCK, 10035):  # errno.WSAEWOULDBLOCK
+            if eventloop.errno_from_exception(e) in (
+                    errno.ETIMEDOUT,
+                    errno.EAGAIN,
+                    errno.EWOULDBLOCK,
+                    10035,
+            ):  # errno.WSAEWOULDBLOCK
                 return
         if not data:
             self.destroy()
@@ -1029,7 +1187,11 @@ class TCPRelayHandler(object):
                     obfs_decode = self._obfs.client_decode(data)
                 except Exception as e:
                     shell.print_exception(e)
-                    logging.error("exception from %s:%d" % (self._client_address[0], self._client_address[1]))
+                    logging.error(
+                        "exception from %s:%d",
+                        self._client_address[0],
+                        self._client_address[1],
+                    )
                     self.destroy()
                     return
                 if obfs_decode[1]:
@@ -1045,7 +1207,11 @@ class TCPRelayHandler(object):
                         self._tcp_mss = self._protocol.get_server_info().tcp_mss
                 except Exception as e:
                     shell.print_exception(e)
-                    logging.error("exception from %s:%d" % (self._client_address[0], self._client_address[1]))
+                    logging.error(
+                        "exception from %s:%d",
+                        self._client_address[0],
+                        self._client_address[1],
+                    )
                     self.destroy()
                     return
             else:
@@ -1063,7 +1229,9 @@ class TCPRelayHandler(object):
             shell.print_exception(e)
             if self._config['verbose']:
                 traceback.print_exc()
-            logging.error("exception from %s:%d" % (self._client_address[0], self._client_address[1]))
+            logging.error(
+                "exception from %s:%d", self._client_address[0], self._client_address[1]
+            )
             self.destroy()
 
     def _on_local_write(self):
@@ -1090,7 +1258,11 @@ class TCPRelayHandler(object):
             err = eventloop.get_sock_error(self._local_sock)
             if err.errno not in [errno.ECONNRESET, errno.EPIPE]:
                 logging.error(err)
-                logging.error("local error, exception from %s:%d" % (self._client_address[0], self._client_address[1]))
+                logging.error(
+                    "local error, exception from %s:%d",
+                    self._client_address[0],
+                    self._client_address[1],
+                )
         self.destroy()
 
     def _on_remote_error(self):
@@ -1100,10 +1272,16 @@ class TCPRelayHandler(object):
                 logging.error(err)
                 if self._remote_address:
                     logging.error(
-                        "remote error, when connect to %s:%d" % (self._remote_address[0], self._remote_address[1]))
+                        "remote error, when connect to %s:%d",
+                        self._remote_address[0],
+                        self._remote_address[1],
+                    )
                 else:
                     logging.error(
-                        "remote error, exception from %s:%d" % (self._client_address[0], self._client_address[1]))
+                        "remote error, exception from %s:%d",
+                        self._client_address[0],
+                        self._client_address[1],
+                    )
         self.destroy()
 
     def handle_event(self, sock, fd, event):
@@ -1120,7 +1298,10 @@ class TCPRelayHandler(object):
                 handle = True
                 self._on_remote_error()
             elif event & (eventloop.POLL_IN | eventloop.POLL_HUP):
-                if not self.speed_tester_d.isExceed() and not self._server.speed_tester_d(self._user_id).isExceed():
+                if (
+                        not self.speed_tester_d.isExceed()
+                        and not self._server.speed_tester_d(self._user_id).isExceed()
+                ):
                     handle = True
                     self._on_remote_read(sock == self._remote_sock)
                 else:
@@ -1133,7 +1314,10 @@ class TCPRelayHandler(object):
                 handle = True
                 self._on_local_error()
             elif event & (eventloop.POLL_IN | eventloop.POLL_HUP):
-                if not self.speed_tester_u.isExceed() and not self._server.speed_tester_u(self._user_id).isExceed():
+                if (
+                        not self.speed_tester_u.isExceed()
+                        and not self._server.speed_tester_u(self._user_id).isExceed()
+                ):
                     handle = True
                     self._on_local_read()
                 else:
@@ -1142,7 +1326,11 @@ class TCPRelayHandler(object):
                 handle = True
                 self._on_local_write()
         else:
-            logging.warning('unknown socket from %s:%d' % (self._client_address[0], self._client_address[1]))
+            logging.warning(
+                'unknown socket from %s:%d',
+                self._client_address[0],
+                self._client_address[1],
+            )
             try:
                 self._loop.removefd(fd)
             except Exception as e:
@@ -1156,8 +1344,12 @@ class TCPRelayHandler(object):
         return handle
 
     def _log_error(self, e):
-        logging.error('%s when handling connection from %s:%d' %
-                      (e, self._client_address[0], self._client_address[1]))
+        logging.error(
+            '%s when handling connection from %s:%d',
+            e,
+            self._client_address[0],
+            self._client_address[1],
+        )
 
     def stage(self):
         return self._stage
@@ -1176,8 +1368,7 @@ class TCPRelayHandler(object):
             return
         self._stage = STAGE_DESTROYED
         if self._remote_address:
-            logging.debug('destroy: %s:%d' %
-                          self._remote_address)
+            logging.debug('destroy: %s:%d', *self._remote_address)
         else:
             logging.debug('destroy')
         if self._remote_sock:
@@ -1237,7 +1428,9 @@ class TCPRelayHandler(object):
 
 
 class TCPRelay(object):
-    def __init__(self, config, dns_resolver, is_local, stat_callback=None, stat_counter=None):
+    def __init__(
+            self, config, dns_resolver, is_local, stat_callback=None, stat_counter=None
+    ):
         self._config = config
         self._is_local = is_local  # False
         self._dns_resolver = dns_resolver
@@ -1261,8 +1454,9 @@ class TCPRelay(object):
             common.connect_log = logging.info
 
         self._timeout = config['timeout']
-        self._timeout_cache = lru_cache.LRUCache(timeout=self._timeout,
-                                                 close_callback=self._close_tcp_client)
+        self._timeout_cache = lru_cache.LRUCache(
+            timeout=self._timeout, close_callback=self._close_tcp_client
+        )
 
         if is_local:
             listen_addr = config['local_address']
@@ -1275,11 +1469,11 @@ class TCPRelay(object):
         if common.to_str(config['protocol']) in obfs.mu_protocol():
             self._update_users(None, None)
 
-        addrs = socket.getaddrinfo(listen_addr, listen_port, 0,
-                                   socket.SOCK_STREAM, socket.SOL_TCP)
+        addrs = socket.getaddrinfo(
+            listen_addr, listen_port, 0, socket.SOCK_STREAM, socket.SOL_TCP
+        )
         if len(addrs) == 0:
-            raise Exception("can't get addrinfo for %s:%d" %
-                            (listen_addr, listen_port))
+            raise Exception("can't get addrinfo for %s:%d" % (listen_addr, listen_port))
         af, socktype, proto, canonname, sa = addrs[0]
         server_socket = socket.socket(af, socktype, proto)
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -1303,8 +1497,9 @@ class TCPRelay(object):
         if self._closed:
             raise Exception('already closed')
         self._eventloop = loop
-        self._eventloop.add(self._server_socket,
-                            eventloop.POLL_IN | eventloop.POLL_ERR, self)
+        self._eventloop.add(
+            self._server_socket, eventloop.POLL_IN | eventloop.POLL_ERR, self
+        )
         self._eventloop.add_periodic(self.handle_periodic)
 
     def remove_handler(self, client):
@@ -1313,13 +1508,20 @@ class TCPRelay(object):
 
     def add_connection(self, val):
         self.server_connections += val
-        logging.debug('server port %5d connections = %d' % (self._listen_port, self.server_connections,))
+        logging.debug(
+            'server port %5d connections = %d',
+            self._listen_port,
+            self.server_connections,
+        )
 
     def get_ud(self):
         return (self.server_transfer_ul, self.server_transfer_dl)
 
     def get_users_ud(self):
-        return (self.server_user_transfer_ul.copy(), self.server_user_transfer_dl.copy())
+        return (
+            self.server_user_transfer_ul.copy(),
+            self.server_user_transfer_dl.copy(),
+        )
 
     def _update_users(self, protocol_param, acl):
         if protocol_param is None:
@@ -1394,17 +1596,25 @@ class TCPRelay(object):
     def speed_tester_u(self, uid):
         if uid not in self._speed_tester_u:
             if self.mu:  # TODO
-                self._speed_tester_u[uid] = SpeedTester(self._config.get("speed_limit_per_user", 0))
+                self._speed_tester_u[uid] = SpeedTester(
+                    self._config.get("speed_limit_per_user", 0)
+                )
             else:
-                self._speed_tester_u[uid] = SpeedTester(self._config.get("speed_limit_per_user", 0))
+                self._speed_tester_u[uid] = SpeedTester(
+                    self._config.get("speed_limit_per_user", 0)
+                )
         return self._speed_tester_u[uid]
 
     def speed_tester_d(self, uid):
         if uid not in self._speed_tester_d:
             if self.mu:  # TODO
-                self._speed_tester_d[uid] = SpeedTester(self._config.get("speed_limit_per_user", 0))
+                self._speed_tester_d[uid] = SpeedTester(
+                    self._config.get("speed_limit_per_user", 0)
+                )
             else:
-                self._speed_tester_d[uid] = SpeedTester(self._config.get("speed_limit_per_user", 0))
+                self._speed_tester_d[uid] = SpeedTester(
+                    self._config.get("speed_limit_per_user", 0)
+                )
         return self._speed_tester_d[uid]
 
     def update_limit(self, uid, max_speed):
@@ -1416,7 +1626,7 @@ class TCPRelay(object):
     def update_stat(self, port, stat_dict, val):
         newval = stat_dict.get(0, 0) + val
         stat_dict[0] = newval
-        logging.debug('port %d connections %d' % (port, newval))
+        logging.debug('port %d connections %d', port, newval)
         connections_step = 25
         if newval >= stat_dict.get(-1, 0) + connections_step:
             stat_dict[-1] = stat_dict.get(-1, 0) + connections_step
@@ -1428,24 +1638,32 @@ class TCPRelay(object):
             if self._listen_port not in self._stat_counter:
                 self._stat_counter[self._listen_port] = {}
             newval = self._stat_counter[self._listen_port].get(local_addr, 0) + val
-            logging.debug('port %d addr %s connections %d' % (self._listen_port, local_addr, newval))
+            logging.debug(
+                'port %d addr %s connections %d', self._listen_port, local_addr, newval
+            )
             self._stat_counter[self._listen_port][local_addr] = newval
-            self.update_stat(self._listen_port, self._stat_counter[self._listen_port], val)
+            self.update_stat(
+                self._listen_port, self._stat_counter[self._listen_port], val
+            )
             if newval <= 0:
                 if local_addr in self._stat_counter[self._listen_port]:
                     del self._stat_counter[self._listen_port][local_addr]
 
             newval = self._stat_counter.get(0, 0) + val
             self._stat_counter[0] = newval
-            logging.debug('Total connections %d' % newval)
+            logging.debug('Total connections %d', newval)
 
             connections_step = 50
             if newval >= self._stat_counter.get(-1, 0) + connections_step:
-                logging.info('Total connections up to %d' % newval)
-                self._stat_counter[-1] = self._stat_counter.get(-1, 0) + connections_step
+                logging.info('Total connections up to %d', newval)
+                self._stat_counter[-1] = (
+                        self._stat_counter.get(-1, 0) + connections_step
+                )
             elif newval <= self._stat_counter.get(-1, 0) - connections_step:
-                logging.info('Total connections down to %d' % newval)
-                self._stat_counter[-1] = self._stat_counter.get(-1, 0) - connections_step
+                logging.info('Total connections down to %d', newval)
+                self._stat_counter[-1] = (
+                        self._stat_counter.get(-1, 0) - connections_step
+                )
 
     def update_activity(self, client, data_len):
         if data_len and self._stat_callback:
@@ -1458,8 +1676,7 @@ class TCPRelay(object):
 
     def _close_tcp_client(self, client):
         if client.remote_address:
-            logging.debug('timed out: %s:%d' %
-                          client.remote_address)
+            logging.debug('timed out: %s:%d', *client.remote_address)
         else:
             logging.debug('timed out')
         client.destroy()
@@ -1468,8 +1685,12 @@ class TCPRelay(object):
         # handle events and dispatch to handlers
         handle = False
         if sock:
-            logging.log(shell.VERBOSE_LEVEL, 'fd %d %s', fd,
-                        eventloop.EVENT_NAMES.get(event, event))
+            logging.log(
+                shell.VERBOSE_LEVEL,
+                'fd %d %s',
+                fd,
+                eventloop.EVENT_NAMES.get(event, event),
+            )
         if sock == self._server_socket:
             if event & eventloop.POLL_ERR:
                 # TODO
@@ -1479,15 +1700,20 @@ class TCPRelay(object):
             try:
                 logging.debug('accept')
                 conn = self._server_socket.accept()
-                handler = TCPRelayHandler(self, self._fd_to_handlers,
-                                          self._eventloop, conn[0], self._config,
-                                          self._dns_resolver, self._is_local)
+                handler = TCPRelayHandler(
+                    self,
+                    self._fd_to_handlers,
+                    self._eventloop,
+                    conn[0],
+                    self._config,
+                    self._dns_resolver,
+                    self._is_local,
+                )
                 if handler.stage() == STAGE_DESTROYED:
                     conn[0].close()
             except (OSError, IOError) as e:
                 error_no = eventloop.errno_from_exception(e)
-                if error_no in (errno.EAGAIN, errno.EINPROGRESS,
-                                errno.EWOULDBLOCK):
+                if error_no in (errno.EAGAIN, errno.EINPROGRESS, errno.EWOULDBLOCK):
                     return
                 else:
                     shell.print_exception(e)

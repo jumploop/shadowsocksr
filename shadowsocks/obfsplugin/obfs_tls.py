@@ -65,6 +65,7 @@ class obfs_auth_data(object):
 
 class tls_ticket_auth(plain.plain):
     def __init__(self, method):
+        super().__init__(method)
         self.method = method
         self.handshake_status = 0
         self.send_buffer = b''
@@ -153,7 +154,7 @@ class tls_ticket_auth(plain.plain):
             self.recv_buffer += buf
             while len(self.recv_buffer) > 5:
                 if ord(self.recv_buffer[0]) != 0x17:
-                    logging.info("data = %s" % (binascii.hexlify(self.recv_buffer)))
+                    logging.info("data = %s", binascii.hexlify(self.recv_buffer))
                     raise Exception('server_decode appdata error')
                 size = struct.unpack('>H', self.recv_buffer[3:5])[0]
                 if len(self.recv_buffer) < size + 5:
@@ -222,7 +223,7 @@ class tls_ticket_auth(plain.plain):
             while len(self.recv_buffer) > 5:
                 if ord(self.recv_buffer[0]) != 0x17 or ord(self.recv_buffer[1]) != 0x3 or ord(
                         self.recv_buffer[2]) != 0x3:
-                    logging.info("data = %s" % (binascii.hexlify(self.recv_buffer)))
+                    logging.info("data = %s", binascii.hexlify(self.recv_buffer))
                     raise Exception('server_decode appdata error')
                 size = struct.unpack('>H', self.recv_buffer[3:5])[0]
                 if len(self.recv_buffer) < size + 5:
@@ -308,7 +309,7 @@ class tls_ticket_auth(plain.plain):
             logging.info("tls_auth wrong sha1, sha1:%s, %s", sha1, verifyid[22:])
             return self.decode_error_return(ogn_buf)
         if self.server_info.data.client_data.get(verifyid[:22]):
-            logging.info("replay attack detect, id = %s" % (binascii.hexlify(verifyid)))
+            logging.info("replay attack detect, id = %s", binascii.hexlify(verifyid))
             return self.decode_error_return(ogn_buf)
         self.server_info.data.client_data.sweep()
         self.server_info.data.client_data[verifyid[:22]] = sessionid

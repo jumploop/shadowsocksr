@@ -116,7 +116,7 @@ class LRUCache(collections.MutableMapping):
                 self.close_callback(value)
             c += 1
         if c:
-            logging.debug('%d keys swept' % c)
+            logging.debug('%d keys swept', c)
         return c < SWEEP_MAX_ITEMS
 
     def clear(self, keep):
@@ -135,7 +135,7 @@ class LRUCache(collections.MutableMapping):
             del self._keys_to_last_time[key]
             c += 1
         if c:
-            logging.debug('%d keys swept' % c)
+            logging.debug('%d keys swept', c)
         return c < SWEEP_MAX_ITEMS
 
 

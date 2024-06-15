@@ -156,19 +156,19 @@ class client_queue(object):
 
     def insert(self, connection_id):
         if not self.enable:
-            logging.warn('obfs auth: not enable')
+            logging.warning('obfs auth: not enable')
             return False
         if not self.is_active():
             self.re_enable(connection_id)
         self.update()
         if connection_id < self.front:
-            logging.warn('obfs auth: deprecated id, someone replay attack')
+            logging.warning('obfs auth: deprecated id, someone replay attack')
             return False
         if connection_id > self.front + 0x4000:
-            logging.warn('obfs auth: wrong id')
+            logging.warning('obfs auth: wrong id')
             return False
         if connection_id in self.alloc:
-            logging.warn('obfs auth: duplicate id, someone replay attack')
+            logging.warning('obfs auth: duplicate id, someone replay attack')
             return False
         if self.back <= connection_id:
             self.back = connection_id + 1
@@ -224,7 +224,7 @@ class obfs_auth_akarin_data(object):
                     local_client_id[client_id].re_enable(connection_id)
                 return local_client_id[client_id].insert(connection_id)
 
-            logging.warn(self.name + ': no inactive client')
+            logging.warning('%s: no inactive client', self.name)
             return False
         else:
             return local_client_id[client_id].insert(connection_id)
@@ -415,7 +415,7 @@ class auth_akarin_rand(auth_base):
             self.server_info.data.local_client_id = b''
         if not self.server_info.data.local_client_id:
             self.server_info.data.local_client_id = rand_bytes(4)
-            logging.debug("local_client_id %s" % (binascii.hexlify(self.server_info.data.local_client_id),))
+            logging.debug("local_client_id %s", binascii.hexlify(self.server_info.data.local_client_id))
             self.server_info.data.connection_id = struct.unpack('<I', rand_bytes(4))[0] & 0xFFFFFF
         self.server_info.data.connection_id += 1
         return b''.join([struct.pack('<I', utc_time),
@@ -460,8 +460,8 @@ class auth_akarin_rand(auth_base):
 
             server_hash = hmac.new(mac_key, self.recv_buf[:length + 2], self.hashfunc).digest()
             if server_hash[:2] != self.recv_buf[length + 2: length + 4]:
-                logging.info('%s: checksum error, data %s'
-                             % (self.no_compatible_method, binascii.hexlify(self.recv_buf[:length])))
+                logging.info('%s: checksum error, data %s',
+                             self.no_compatible_method, binascii.hexlify(self.recv_buf[:length]))
                 self.raw_trans = True
                 self.recv_buf = b''
                 raise Exception('client_post_decrypt data uncorrect checksum')
@@ -532,10 +532,10 @@ class auth_akarin_rand(auth_base):
 
             md5data = hmac.new(self.user_key, self.recv_buf[12: 12 + 20], self.hashfunc).digest()
             if md5data[:4] != self.recv_buf[32:36]:
-                logging.error('%s data uncorrect auth HMAC-MD5 from %s:%d, data %s' % (
-                    self.no_compatible_method, self.server_info.client, self.server_info.client_port,
-                    binascii.hexlify(self.recv_buf)
-                ))
+                logging.error('%s data uncorrect auth HMAC-MD5 from %s:%d, data %s',
+                              self.no_compatible_method, self.server_info.client, self.server_info.client_port,
+                              binascii.hexlify(self.recv_buf)
+                              )
                 if len(self.recv_buf) < 36:
                     return (b'', False)
                 return self.not_match_return(self.recv_buf)
@@ -552,16 +552,16 @@ class auth_akarin_rand(auth_base):
             connection_id = struct.unpack('<I', head[8:12])[0]
             time_dif = common.int32(utc_time - (int(time.time()) & 0xffffffff))
             if time_dif < -self.max_time_dif or time_dif > self.max_time_dif:
-                logging.info('%s: wrong timestamp, time_dif %d, data %s' % (
-                    self.no_compatible_method, time_dif, binascii.hexlify(head)
-                ))
+                logging.info('%s: wrong timestamp, time_dif %d, data %s',
+                             self.no_compatible_method, time_dif, binascii.hexlify(head)
+                             )
                 return self.not_match_return(self.recv_buf)
             elif self.server_info.data.insert(self.user_id, client_id, connection_id):
                 self.has_recv_header = True
                 self.client_id = client_id
                 self.connection_id = connection_id
             else:
-                logging.info('%s: auth fail, data %s' % (self.no_compatible_method, binascii.hexlify(out_buf)))
+                logging.info('%s: auth fail, data %s', self.no_compatible_method, binascii.hexlify(out_buf))
                 return self.not_match_return(self.recv_buf)
 
             self.on_recv_auth_data(utc_time)
@@ -590,7 +590,7 @@ class auth_akarin_rand(auth_base):
                     self.raw_trans = True
                     self.recv_buf = b''
                     if self.recv_id == 1:
-                        logging.info(self.no_compatible_method + ': over size')
+                        logging.info('%s: over size', self.no_compatible_method)
                         return (b'E' * 2048, False)
                     else:
                         raise Exception('server_post_decrype data error')
@@ -600,7 +600,7 @@ class auth_akarin_rand(auth_base):
                 self.raw_trans = True
                 self.recv_buf = b''
                 if self.recv_id == 1:
-                    logging.info(self.no_compatible_method + ': over size')
+                    logging.info('%s: over size', self.no_compatible_method)
                     return (b'E' * 2048, False)
                 else:
                     raise Exception('server_post_decrype data error')
@@ -610,9 +610,9 @@ class auth_akarin_rand(auth_base):
 
             client_hash = hmac.new(mac_key, self.recv_buf[:length + cmd_len + 2], self.hashfunc).digest()
             if client_hash[:2] != self.recv_buf[length + cmd_len + 2: length + cmd_len + 4]:
-                logging.info('%s: checksum error, data %s' % (
-                    self.no_compatible_method, binascii.hexlify(self.recv_buf[:length + cmd_len]),
-                ))
+                logging.info('%s: checksum error, data %s',
+                             self.no_compatible_method, binascii.hexlify(self.recv_buf[:length + cmd_len]),
+                             )
                 self.raw_trans = True
                 self.recv_buf = b''
                 if self.recv_id == 1:

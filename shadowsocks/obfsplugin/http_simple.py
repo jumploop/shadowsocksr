@@ -63,6 +63,7 @@ def match_begin(str1, str2):
 
 class http_simple(plain.plain):
     def __init__(self, method):
+        super().__init__(method)
         self.method = method
         self.has_sent_header = False
         self.has_recv_header = False
@@ -189,7 +190,7 @@ class http_simple(plain.plain):
             if match_begin(buf, b'GET ') or match_begin(buf, b'POST '):
                 if len(buf) > 65536:
                     self.recv_buffer = None
-                    logging.warn('http_simple: over size')
+                    logging.warning('http_simple: over size')
                     return self.not_match_return(buf)
             else:  # not http header, run on original protocol
                 self.recv_buffer = None
@@ -272,6 +273,7 @@ class http_post(http_simple):
 
 class random_head(plain.plain):
     def __init__(self, method):
+        super().__init__(method)
         self.method = method
         self.has_sent_header = False
         self.has_recv_header = False

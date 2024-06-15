@@ -94,7 +94,7 @@ class Encryptor(object):
             else:
                 self.cipher = self.get_cipher(key, method, 1, iv)
         else:
-            logging.error('method %s not supported' % method)
+            logging.error('method %s not supported', method)
             sys.exit(1)
 
     def get_method_info(self, method):
