@@ -45,7 +45,7 @@ def main():
     try:
         import resource
         logging.info(
-            'current process RLIMIT_NOFILE resource: soft %d hard %d', resource.getrlimit(resource.RLIMIT_NOFILE))
+            'current process RLIMIT_NOFILE resource: soft %d hard %d', *resource.getrlimit(resource.RLIMIT_NOFILE))
     except ImportError:
         pass
 

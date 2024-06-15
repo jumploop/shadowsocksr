@@ -29,6 +29,8 @@ from shadowsocks import encrypt
 VERBOSE_LEVEL = 5
 
 verbose = 0
+log_path = '/var/log/ssserver.log'
+format = '%(asctime)s %(levelname)-8s %(filename)s:%(lineno)s %(message)s'
 
 
 def check_python():
@@ -136,8 +138,7 @@ def get_config(is_local):
     global verbose
     config = {}
     config_path = None
-    logging.basicConfig(level=logging.INFO,
-                        format='%(levelname)-s: %(message)s')
+    logging.basicConfig(filename=log_path, level=logging.INFO, format=format)
     if is_local:
         shortopts = 'hd:s:b:p:k:l:m:O:o:G:g:c:t:vq'
         longopts = ['help', 'fast-open', 'pid-file=', 'log-file=', 'user=',
@@ -294,9 +295,7 @@ def get_config(is_local):
     else:
         level = logging.INFO
     verbose = config['verbose']
-    logging.basicConfig(filename='/var/log/ssserver.log', level=level,
-                        format='%(asctime)s %(levelname)-8s %(filename)s:%(lineno)s %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S')
+    logging.basicConfig(filename=log_path, level=level, format=format, datefmt='%Y-%m-%d %H:%M:%S')
     check_config(config, is_local)
 
     return config
