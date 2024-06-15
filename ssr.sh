@@ -747,15 +747,16 @@ Install_SSR() {
 }
 Update_SSR() {
   SSR_installation_status
-  cd ${ssr_folder} || exit
+  cd /tmp|| exit
   # echo -e "因破娃暂停更新ShadowsocksR服务端，所以此功能临时禁用。"
   wget -N --no-check-certificate "https://github.com/jumploop/shadowsocksr/archive/manyuser.zip"
   [[ ! -e "manyuser.zip" ]] && echo -e "${Error} ShadowsocksR服务端 更新失败，请检查 !" && rm -rf manyuser.zip && exit 1
   unzip "manyuser.zip"
-  [[ ! -e "${ssr_folder}/shadowsocksr-manyuser/" ]] && echo -e "${Error} ShadowsocksR服务端 解压失败 !" && rm -rf manyuser.zip && exit 1
-  cp -rf "${ssr_folder}/shadowsocksr-manyuser/*" "/usr/local/shadowsocksr/"
+  ls -lah
+  [[ ! -e "/tmp/shadowsocksr-manyuser/" ]] && echo -e "${Error} ShadowsocksR服务端 解压失败 !" && rm -rf manyuser.zip && exit 1
+  cp -rf "/tmp/shadowsocksr-manyuser"/* "${ssr_folder}"
   echo -e "${Info} ShadowsocksR服务端 更新成功!"
-  rm -rf manyuser.zip && rm -rf "${ssr_folder}/shadowsocksr-manyuser/"
+  rm -rf manyuser.zip && rm -rf "shadowsocksr-manyuser/"
   JQ_install
   Restart_SSR
 }
