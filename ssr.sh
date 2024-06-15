@@ -647,6 +647,7 @@ RestartSec=42s
 [Install]
 WantedBy=multi-user.target
 EOF
+  echo -e "${Info} ShadowsocksR service服务 添加完成 !"
 }
 Service_SSR() {
 
@@ -710,7 +711,7 @@ Installation_dependency() {
 # 关闭防火墙
 shutdown_firewalld() {
   if [[ ${release} = "centos" ]]; then
-    firewall-cmd --state >/tmp/status
+    firewall-cmd --state >/tmp/status >/dev/null 2>&1
     if grep "running" /tmp/status; then
       echo -e "${Info} 开始关闭防火墙..."
       systemctl stop firewalld.service
@@ -1205,7 +1206,7 @@ Port_mode_switching() {
 # 给ssr日志添加日志转储
 ssr_logrotate() {
   if [ -e /etc/logrotate.d/ssrlog ]; then
-    echo "ssrlog rotate already exists"
+    echo -e "${Info} ssrlog rotate already exists"
   else
     cat >/etc/logrotate.d/ssrlog <<-EOF
 /var/log/ssserver.log
@@ -1222,7 +1223,7 @@ ssr_logrotate() {
     endscript
 }
 EOF
-    echo "ssrlog rotate set finished"
+    echo -e "${Info} ssrlog rotate set finished"
   fi
 }
 
