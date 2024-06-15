@@ -90,6 +90,7 @@ def find_config():
 
 
 def check_config(config, is_local):
+    logging.info('Checking config for local configuration %s', config)
     if config.get('daemon', None) == 'stop':
         # no need to specify configuration for daemon stop
         return
@@ -138,7 +139,7 @@ def get_config(is_local):
     global verbose
     config = {}
     config_path = None
-    logging.basicConfig(filename=log_path, level=logging.INFO, format=format)
+    logging.basicConfig(filename=log_path, level=logging.INFO, format=format, datefmt='%Y-%m-%d %H:%M:%S')
     if is_local:
         shortopts = 'hd:s:b:p:k:l:m:O:o:G:g:c:t:vq'
         longopts = ['help', 'fast-open', 'pid-file=', 'log-file=', 'user=',
