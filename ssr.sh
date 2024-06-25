@@ -1504,13 +1504,13 @@ Install_kernel_start_BBR() {
   bash <(curl -Lso- https://git.io/kernel.sh)
 }
 Update_Shell() {
-  sh_new_ver=$(wget --no-check-certificate -qO- -t1 -T3 "https://${github}/doubi/master/ssr.sh" | grep 'sh_ver="' | awk -F "=" '{print $NF}' | sed 's/\"//g' | head -1) && sh_new_type="github"
+  sh_new_ver=$(wget --no-check-certificate -qO- -t1 -T3 "https://${github}/shadowsocksr/manyuser/ssr.sh" | grep 'sh_ver="' | awk -F "=" '{print $NF}' | sed 's/\"//g' | head -1) && sh_new_type="github"
   [[ -z ${sh_new_ver} ]] && echo -e "${Error} 无法链接到 Github !" && exit 0
   if [[ -e "/etc/init.d/ssr" ]]; then
     rm -rf /etc/init.d/ssr
     Service_SSR
   fi
-  wget -N --no-check-certificate "https://${github}/doubi/master/ssr.sh" && chmod +x ssr.sh
+  wget -N --no-check-certificate "https://${github}/shadowsocksr/manyuser/ssr.sh" && chmod +x ssr.sh
   echo -e "脚本已更新为最新版本[ ${sh_new_ver} ] !(注意：因为更新方式为直接覆盖当前运行的脚本，所以可能下面会提示一些报错，无视即可)" && exit 0
 }
 # 显示 菜单状态
