@@ -638,7 +638,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python /usr/local/shadowsocksr/shadowsocks/server.py -c /etc/shadowsocksr/user-config.json a
+ExecStart=/usr/bin/python3 /usr/local/shadowsocksr/shadowsocks/server.py -c /etc/shadowsocksr/user-config.json a
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
 Restart=on-failure
