@@ -19,6 +19,10 @@ RUN apk --no-cache add python3 \
     libsodium \
     wget
 
+RUN apk add tzdata \
+&& cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+&& echo "Shanghai/Asia" > /etc/timezone \
+&& apk del tzdata
 
 RUN mkdir -p $WORK && \
     wget -qO- --no-check-certificate https://github.com/jumploop/shadowsocksr/archive/$BRANCH.tar.gz | tar -xzf - -C $WORK
