@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+SERVER_PORT=51348
 
 rpm -q docker || yum -y install docker
 systemctl status docker || systemctl start docker
@@ -8,4 +9,4 @@ docker rm $(docker ps -a -q)
 docker rmi $(docker images -q)
 
 docker build -t ssr .
-docker run -d  -p 51348:51348 ssr
+docker run -d  -p $SERVER_PORT:$SERVER_PORT ssr
