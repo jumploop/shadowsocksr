@@ -19,6 +19,7 @@ import time
 import sys
 import threading
 import os
+import logging
 
 if __name__ == '__main__':
     import inspect
@@ -27,8 +28,11 @@ if __name__ == '__main__':
 
 import server_pool
 import db_transfer
-from shadowsocks import shell
+from shadowsocks import shell, log_format
 from configloader import load_config, get_config
+
+log_path='/var/log/shadowsocks.log'
+logging.basicConfig(filename=log_path, level=logging.INFO, format=log_format, datefmt='%Y-%m-%d %H:%M:%S')
 
 
 class MainThread(threading.Thread):

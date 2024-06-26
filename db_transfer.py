@@ -124,12 +124,12 @@ class TransferBase(object):
                     try:
                         cfg[name] = cfg[name].encode('utf-8')
                     except Exception as e:
-                        logging.warning('encode cfg key "%s" fail, val "%s"' % (name, cfg[name]))
+                        logging.warning('encode cfg key "%s" fail, val "%s"', name, cfg[name])
 
             if port not in cur_servers:
                 cur_servers[port] = passwd
             else:
-                logging.error('more than one user use the same port [%s]' % (port,))
+                logging.error('more than one user use the same port [%s]', port, )
                 continue
 
             if 'protocol' in cfg and 'protocol_param' in cfg and common.to_str(cfg['protocol']) in obfs.mu_protocol():
@@ -159,7 +159,7 @@ class TransferBase(object):
             if port in mu_servers:
                 if ServerPool.get_instance().server_is_run(port) > 0:
                     if cfgchange:
-                        logging.info('db stop server at port [%s] reason: config changed: %s' % (port, cfg))
+                        logging.info('db stop server at port [%s] reason: config changed: %s', port, cfg)
                         ServerPool.get_instance().cb_del_server(port)
                         self.force_update_transfer.add(port)
                         new_servers[port] = (passwd, cfg)
@@ -168,12 +168,12 @@ class TransferBase(object):
             else:
                 if ServerPool.get_instance().server_is_run(port) > 0:
                     if config['additional_ports_only'] or not allow:
-                        logging.info('db stop server at port [%s]' % (port,))
+                        logging.info('db stop server at port [%s]', port, )
                         ServerPool.get_instance().cb_del_server(port)
                         self.force_update_transfer.add(port)
                     else:
                         if cfgchange:
-                            logging.info('db stop server at port [%s] reason: config changed: %s' % (port, cfg))
+                            logging.info('db stop server at port [%s] reason: config changed: %s', port, cfg)
                             ServerPool.get_instance().cb_del_server(port)
                             self.force_update_transfer.add(port)
                             new_servers[port] = (passwd, cfg)
@@ -187,7 +187,7 @@ class TransferBase(object):
             if row['port'] in cur_servers:
                 pass
             else:
-                logging.info('db stop server at port [%s] reason: port not exist' % (row['port']))
+                logging.info('db stop server at port [%s] reason: port not exist', row['port'])
                 ServerPool.get_instance().cb_del_server(row['port'])
                 self.clear_cache(row['port'])
                 if row['port'] in self.port_uid_table:
@@ -200,7 +200,7 @@ class TransferBase(object):
                 passwd, cfg = new_servers[port]
                 self.new_server(port, passwd, cfg)
 
-        logging.debug('db allow users %s \nmu_servers %s' % (allow_users, mu_servers))
+        logging.debug('db allow users %s \nmu_servers %s', allow_users, mu_servers)
         for port in mu_servers:
             ServerPool.get_instance().update_mu_users(port, allow_users)
 
@@ -215,8 +215,8 @@ class TransferBase(object):
         protocol = cfg.get('protocol', ServerPool.get_instance().config.get('protocol', 'origin'))
         method = cfg.get('method', ServerPool.get_instance().config.get('method', 'None'))
         obfs = cfg.get('obfs', ServerPool.get_instance().config.get('obfs', 'plain'))
-        logging.info('db start server at port [%s] pass [%s] protocol [%s] method [%s] obfs [%s]' % (
-            port, passwd, protocol, method, obfs))
+        logging.info('db start server at port [%s] pass [%s] protocol [%s] method [%s] obfs [%s]',
+                     port, passwd, protocol, method, obfs)
         ServerPool.get_instance().new_server(port, cfg)
 
     def cmp(self, val1, val2):
@@ -250,7 +250,7 @@ class TransferBase(object):
         try:
             import resource
             logging.info(
-                'current process RLIMIT_NOFILE resource: soft %d hard %d' % resource.getrlimit(resource.RLIMIT_NOFILE))
+                'current process RLIMIT_NOFILE resource: soft %d hard %d', *resource.getrlimit(resource.RLIMIT_NOFILE))
         except:
             pass
 
@@ -545,7 +545,7 @@ class Dbv3Transfer(DbTransfer):
                     logging.error(e)
                 cur.close()
             except:
-                logging.warn('no `ss_node_online_log` or `" + self.ss_node_info_name + "` in db')
+                logging.warning('no `ss_node_online_log` or `" + self.ss_node_info_name + "` in db')
 
         conn.close()
         return update_transfer
@@ -579,7 +579,7 @@ class Dbv3Transfer(DbTransfer):
                 rows = []
                 cur.close()
                 conn.commit()
-                logging.warn(
+                logging.warning(
                     'None result when select node info from ss_node in db, maybe you set the incorrect node id')
                 return rows
             cur.close()
@@ -612,12 +612,12 @@ class Dbv3Transfer(DbTransfer):
 
     def traffic_format(self, traffic):
         if traffic < 1024 * 8:
-            return str(int(traffic)) + "B";
+            return str(int(traffic)) + "B"
 
         if traffic < 1024 * 1024 * 2:
-            return str(round((traffic / 1024.0), 2)) + "KB";
+            return str(round((traffic / 1024.0), 2)) + "KB"
 
-        return str(round((traffic / 1048576.0), 2)) + "MB";
+        return str(round((traffic / 1048576.0), 2)) + "MB"
 
 
 class MuJsonTransfer(TransferBase):

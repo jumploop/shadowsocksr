@@ -113,7 +113,7 @@ class ServerPool(object):
 
         if 'server_ipv6' in self.config:
             if port in self.tcp_ipv6_servers_pool:
-                logging.info("server already at %s:%d" % (self.config['server_ipv6'], port))
+                logging.info("server already at %s:%d", self.config['server_ipv6'], port)
                 return 'this port server is already running'
             else:
                 a_config = self.config.copy()
@@ -126,7 +126,7 @@ class ServerPool(object):
                 a_config['max_connect'] = 128
                 a_config['method'] = common.to_str(a_config['method'])
                 try:
-                    logging.info("starting server at [%s]:%d" % (common.to_str(a_config['server']), port))
+                    logging.info("starting server at [%s]:%d", common.to_str(a_config['server']), port)
 
                     tcp_server = tcprelay.TCPRelay(a_config, self.dns_resolver, False, stat_counter=self.stat_counter)
                     tcp_server.add_to_loop(self.loop)
@@ -143,7 +143,7 @@ class ServerPool(object):
 
         if 'server' in self.config:
             if port in self.tcp_servers_pool:
-                logging.info("server already at %s:%d" % (common.to_str(self.config['server']), port))
+                logging.info("server already at %s:%d", common.to_str(self.config['server']), port)
                 return 'this port server is already running'
             else:
                 a_config = self.config.copy()
@@ -152,7 +152,7 @@ class ServerPool(object):
                 a_config['max_connect'] = 128
                 a_config['method'] = common.to_str(a_config['method'])
                 try:
-                    logging.info("starting server at %s:%d" % (common.to_str(a_config['server']), port))
+                    logging.info("starting server at %s:%d", common.to_str(a_config['server']), port)
 
                     tcp_server = tcprelay.TCPRelay(a_config, self.dns_resolver, False)
                     tcp_server.add_to_loop(self.loop)
@@ -164,13 +164,13 @@ class ServerPool(object):
 
                 except Exception as e:
                     if not ipv6_ok:
-                        logging.warn("IPV4 %s " % (e,))
+                        logging.warning("IPV4 %s ", e, )
 
         return True
 
     def del_server(self, port):
         port = int(port)
-        logging.info("del server at %d" % port)
+        logging.info("del server at %d", port)
         try:
             udpsock = socket(AF_INET, SOCK_DGRAM)
             udpsock.sendto('%s:%s:0:0' % (get_config().MANAGE_PASS, port),
@@ -184,9 +184,9 @@ class ServerPool(object):
         port = int(port)
 
         if port not in self.tcp_servers_pool:
-            logging.info("stopped server at %s:%d already stop" % (self.config['server'], port))
+            logging.info("stopped server at %s:%d already stop", self.config['server'], port)
         else:
-            logging.info("stopped server at %s:%d" % (self.config['server'], port))
+            logging.info("stopped server at %s:%d", self.config['server'], port)
             try:
                 self.tcp_servers_pool[port].close(True)
                 del self.tcp_servers_pool[port]
@@ -200,9 +200,9 @@ class ServerPool(object):
 
         if 'server_ipv6' in self.config:
             if port not in self.tcp_ipv6_servers_pool:
-                logging.info("stopped server at [%s]:%d already stop" % (self.config['server_ipv6'], port))
+                logging.info("stopped server at [%s]:%d already stop", self.config['server_ipv6'], port)
             else:
-                logging.info("stopped server at [%s]:%d" % (self.config['server_ipv6'], port))
+                logging.info("stopped server at [%s]:%d", self.config['server_ipv6'], port)
                 try:
                     self.tcp_ipv6_servers_pool[port].close(True)
                     del self.tcp_ipv6_servers_pool[port]
