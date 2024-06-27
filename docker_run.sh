@@ -10,7 +10,7 @@ docker rmi $(docker images -q)
 
 docker build -t ssr .
 
-read -r -e -p "(默认: 1):" count
+read -r -e -p "创建容器的数量(默认: 1):" count
 [[ -z ${count} ]] && count=1
 
 create_docker() {
@@ -20,8 +20,8 @@ create_docker() {
   echo "container map port=$port"
 }
 
-number=0
-while [ "$number" -lt "$count" ]; do
+number=1
+while [ "$number" -le "$count" ]; do
   echo "creating the number $number container"
   if [ "$count" -eq 1 ]; then
     PORT=$SERVER_PORT
