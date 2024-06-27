@@ -666,5 +666,5 @@ class MuJsonTransfer(TransferBase):
                     logging.error(e)
 
         if not rows:
-            logging.warn('no user in json file')
+            logging.warning('no user in json file')
         return rows
