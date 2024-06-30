@@ -699,6 +699,9 @@ JQ_install() {
 Installation_dependency() {
   if [[ ${release} == "centos" ]]; then
     Centos_yum
+    # 启动iptables
+    systemctl enable iptables
+    systemctl start iptables
   else
     Debian_apt
   fi
