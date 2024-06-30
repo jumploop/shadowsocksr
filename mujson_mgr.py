@@ -133,9 +133,9 @@ class MuMgr(object):
 
     def add(self, user):
         logging.info('adding user %s', user)
-        up = {'enable': 1, 'u': 0, 'd': 0, 'method': "none",
-              'protocol': "auth_chain_a",
-              'obfs': "plain",
+        up = {'enable': 1, 'u': 0, 'd': 0, 'method': "aes-128-ctr",
+              'protocol': "auth_aes128_md5",
+              'obfs': "tls1.2_ticket_auth_compatible",
               'transfer_enable': 9007199254740992}
         up['passwd'] = self.rand_pass()
         up.update(user)
