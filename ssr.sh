@@ -58,7 +58,7 @@ check_sys() {
   bit=$(uname -m)
 }
 check_pid() {
-  PID=$(ps -ef | pgrep -f server.py)
+  PID=$(ps -ef | pgrep -f /usr/local/shadowsocksr/shadowsocks/server.py)
 }
 SSR_installation_status() {
   [[ ! -e ${config_user_file} ]] && echo -e "${Error} 没有发现 ShadowsocksR 配置文件，请检查 !" && exit 1
