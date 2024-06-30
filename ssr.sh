@@ -592,6 +592,7 @@ Check_python() {
 }
 Centos_yum() {
   yum update -y
+  yum install -y iptables-services
   yum install -y bash-completion
   if grep "7\..*" /etc/redhat-release | grep -i centos >/dev/null; then
     yum install -y vim unzip net-tools
