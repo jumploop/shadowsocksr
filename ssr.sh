@@ -711,8 +711,8 @@ Installation_dependency() {
 # 关闭防火墙
 shutdown_firewalld() {
   if [[ ${release} = "centos" ]]; then
-    firewall-cmd --state >/tmp/status >/dev/null 2>&1
-    if grep "running" /tmp/status; then
+    status=$(firewall-cmd --state)
+    if [ "$status" = "running" ]; then
       echo -e "${Info} 开始关闭防火墙..."
       systemctl stop firewalld.service
       systemctl disable firewalld.service
