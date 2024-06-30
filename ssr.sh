@@ -250,8 +250,10 @@ View_User() {
 Set_config_port() {
   while true; do
     echo -e "请输入要设置的ShadowsocksR账号 端口"
-    read -r -e -p "(默认: 2333):" ssr_port
-    [[ -z "$ssr_port" ]] && ssr_port="2333"
+    local default_port
+    default_port=$(python -c 'import random;print(random.randint(1000, 65536))')
+    read -r -e -p "(默认: $default_port):" ssr_port
+    [[ -z "$ssr_port" ]] && ssr_port=$default_port
 
     if echo $((ssr_port + 0)) &>/dev/null; then
       if [[ ${ssr_port} -ge 1 ]] && [[ ${ssr_port} -le 65535 ]]; then
