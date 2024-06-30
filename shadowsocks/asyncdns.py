@@ -83,11 +83,11 @@ def detect_ipv6_supprot():
         try:
             s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
             s.connect(('::1', 0))
-            print('IPv6 support')
+            logging.info('IPv6 support')
             return True
         except:
             pass
-    print('IPv6 not support')
+    logging.error('IPv6 not support')
     return False
 
 
