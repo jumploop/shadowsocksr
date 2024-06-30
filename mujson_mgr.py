@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
-
+import logging
 import traceback
 from shadowsocks import shell, common
 from configloader import load_config, get_config
@@ -128,13 +128,14 @@ class MuMgr(object):
 
     def rand_pass(self):
         return ''.join(
-            [random.choice('''ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~-_=+(){}[]^&%$@''') for i
+            [random.choice('''ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~-_=+(){}[]^&%$@''') for _
              in range(8)])
 
     def add(self, user):
-        up = {'enable': 1, 'u': 0, 'd': 0, 'method': "aes-128-ctr",
-              'protocol': "auth_aes128_md5",
-              'obfs': "tls1.2_ticket_auth_compatible",
+        logging.info('adding user %s', user)
+        up = {'enable': 1, 'u': 0, 'd': 0, 'method': "none",
+              'protocol': "auth_chain_a",
+              'obfs': "plain",
               'transfer_enable': 9007199254740992}
         up['passwd'] = self.rand_pass()
         up.update(user)
