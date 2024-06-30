@@ -700,8 +700,8 @@ Installation_dependency() {
   if [[ ${release} == "centos" ]]; then
     Centos_yum
     # 启动iptables
-    systemctl enable iptables
     systemctl start iptables
+    systemctl start ip6tables
   else
     Debian_apt
   fi
