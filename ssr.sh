@@ -1363,7 +1363,7 @@ Configure_LotServer() {
 }
 Install_LotServer() {
   [[ -e ${LotServer_file} ]] && echo -e "${Error} LotServer 已安装 !" && exit 1
-  #Github: https://github.com/0oVicero0/serverSpeeser_Install
+  #Github: https://github.com/0oVicero0/serverSpeeder_Install
   wget --no-check-certificate -qO /tmp/appex.sh "https://${github}/serverSpeeder_Install/master/appex.sh"
   [[ ! -e "/tmp/appex.sh" ]] && echo -e "${Error} LotServer 安装脚本下载失败 !" && exit 1
   bash /tmp/appex.sh 'install'
