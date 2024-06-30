@@ -669,10 +669,7 @@ Service_SSR() {
       echo -e "${Error} ShadowsocksR服务 管理脚本下载失败 !" && exit 1
     fi
     chmod +x /etc/init.d/ssr
-    Add_ssr_Service
-    systemctl daemon-reload
-    systemctl enable ssr
-    #    update-rc.d -f ssr defaults
+    update-rc.d -f ssr defaults
   fi
   echo -e "${Info} ShadowsocksR服务 管理脚本下载完成 !"
 }
