@@ -786,7 +786,9 @@ Uninstall_SSR() {
       Save_iptables
     fi
     if [[ ${release} = "centos" ]]; then
-      chkconfig --del ssr
+      # chkconfig --del ssr
+      systemctl stop ssr
+      systemctl disable ssr
     else
       update-rc.d -f ssr remove
     fi
