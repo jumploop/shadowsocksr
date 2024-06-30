@@ -1219,7 +1219,7 @@ ssr_logrotate() {
     minsize 10M
     sharedscripts
     postrotate
-    /etc/init.d/ssr stop && /etc/init.d/ssr start
+        /etc/init.d/ssr stop && /etc/init.d/ssr start
     endscript
 }
 EOF
