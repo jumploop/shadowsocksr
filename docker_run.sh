@@ -4,19 +4,19 @@ SERVER_PORT=51348
 rpm -q docker || yum -y install docker
 systemctl status docker || systemctl start docker
 systemctl is-enabled docker || systemctl enable docker
-docker stop $(docker ps -a -q)
-docker rm $(docker ps -a -q)
-docker rmi $(docker images -q)
+docker stop "$(docker ps -a -q)"
+docker rm "$(docker ps -a -q)"
+docker rmi "$(docker images -q)"
 
 docker build -t ssr .
 
-read -r -e -p "创建容器的数量(默认: 1):" count
+read -erp "创建容器的数量(默认: 1):" count
 [[ -z ${count} ]] && count=1
 
 create_docker() {
   local port
   port=$1
-  docker run -d -p "$port":$SERVER_PORT ssr
+  docker run -d -p "$port":$SERVER_PORT --restart=always --name ssr${number} ssr
   echo "container map port=$port"
 }
 
