@@ -591,6 +591,17 @@ Check_python() {
   fi
 }
 Centos_yum() {
+  if yum clean all && yum makecache; then
+    echo "Centos yum available"
+  else
+    echo "Centos yum not available,config other yum"
+    wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+    yum clean all
+    yum makecache
+    yum -y install epel-release
+    yum clean all
+    yum makecache
+  fi
   yum update -y
   yum install -y iptables-services
   yum install -y bash-completion
