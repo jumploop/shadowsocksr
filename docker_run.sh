@@ -48,10 +48,7 @@ install_docker() {
 }
 
 clean_docker() {
-  docker stop $(docker ps -a -q)
-  docker rm $(docker ps -a -q)
-  docker rmi $(docker images -q)
-
+  docker stop $(docker ps -qa -f name=ssr) && docker rm $(docker ps -qa -f name=ssr)
 }
 
 create_docker() {
