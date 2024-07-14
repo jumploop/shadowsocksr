@@ -23,7 +23,7 @@ RUN apk add -U tzdata && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && 
 
 RUN mkdir -p $WORK && \
     wget -q --no-check-certificate https://github.com/jumploop/shadowsocksr/archive/$BRANCH.zip -P $WORK && \
-    cd $WORK && unzip $BRANCH.zip
+    cd $WORK && unzip $BRANCH.zip && rm -rf $BRANCH.zip
 
 
 WORKDIR $WORK/shadowsocksr-$BRANCH/shadowsocks
