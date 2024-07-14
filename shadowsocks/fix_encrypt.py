@@ -5,7 +5,7 @@ from __future__ import absolute_import, division, print_function, with_statement
 import fileinput
 from contextlib import closing
 
-from shadowsocks import encrypt_test
+import encrypt_test
 
 
 def enable_rc4_legacy():
