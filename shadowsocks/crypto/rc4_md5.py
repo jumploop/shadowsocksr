@@ -39,6 +39,8 @@ def enable_rc4_legacy():
                 print('activate = 1')
                 print('[legacy_sect]')
                 print('activate = 1')
+            else:
+                print(line)
 
 def create_cipher(alg, key, iv, op, key_as_bytes=0, d=None, salt=None,
                   i=1, padding=1):
