@@ -48,6 +48,7 @@ install_docker() {
 }
 
 clean_docker() {
+  docker rmi -f $(docker images -f "dangling=true" -q)
   docker stop $(docker ps -qa -f name=ssr) && docker rm $(docker ps -qa -f name=ssr) && docker rmi $(docker images -q --filter=reference=ssr)
 }
 
