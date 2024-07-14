@@ -15,16 +15,12 @@ ARG BRANCH=manyuser
 ARG WORK=/root
 
 
-RUN apk --no-cache add python3 \
-    libsodium \
-    wget unzip
-
+RUN apk --no-cache add libsodium wget unzip
 RUN apk add -U tzdata && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Shanghai/Asia" > /etc/timezone && apk del tzdata
 
 RUN mkdir -p $WORK && \
     wget -q --no-check-certificate https://github.com/jumploop/shadowsocksr/archive/$BRANCH.zip -P $WORK && \
-    cd $WORK && unzip $BRANCH.zip && rm -rf $BRANCH.zip
-
+    unzip $WORK/$BRANCH.zip -d $WORK && rm -rf $WORK/*.zip
 
 WORKDIR $WORK/shadowsocksr-$BRANCH/shadowsocks
 
