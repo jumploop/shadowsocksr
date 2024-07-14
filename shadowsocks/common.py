@@ -17,13 +17,11 @@
 
 from __future__ import absolute_import, division, print_function, with_statement
 
-import fileinput
 import socket
 import struct
 import logging
 import binascii
 import re
-from contextlib import closing
 
 from shadowsocks import lru_cache
 
@@ -409,33 +407,6 @@ class UDPAsyncDNSHandler(object):
                 return self.call_back("", self.remote_addr, ip, self.params)
         logging.warning("can't resolve %s", self.remote_addr)
         return self.call_back("fail to resolve", self.remote_addr, None, self.params)
-
-
-def enable_rc4_legacy():
-    openssl_conf = "/etc/ssl/openssl.cnf"
-    std = ['[provider_sect]', 'legacy = legacy_sect', '[legacy_sect]', 'activate = 1']
-    with open(openssl_conf, 'r') as f:
-        for line in f.read().splitlines():
-            if line in std:
-                std.remove(line)
-    if std:
-        modify_config(openssl_conf)
-
-
-def modify_config(openssl_conf):
-    with closing(fileinput.input(openssl_conf, inplace=True)) as file:
-        for line in file:
-            line = line.rstrip()
-            if line.startswith('[provider_sect]'):
-                print(line)
-                print('legacy = legacy_sect')
-            elif line.startswith('[default_sect]'):
-                print(line)
-                print('activate = 1')
-                print('[legacy_sect]')
-                print('activate = 1')
-            else:
-                print(line)
 
 
 def test_inet_conv():

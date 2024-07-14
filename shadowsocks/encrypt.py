@@ -119,12 +119,7 @@ class Encryptor(object):
             # this iv is for cipher not decipher
             self.cipher_iv = iv[: m[1]]
         self.cipher_key = key
-        try:
-            return m[2](method, key, iv, op)
-        except Exception as e:
-            logging.error('exception in encrypting: %s', e)
-            common.enable_rc4_legacy()
-            return m[2](method, key, iv, op)
+        return m[2](method, key, iv, op)
 
     def encrypt(self, buf):
         if len(buf) == 0:
