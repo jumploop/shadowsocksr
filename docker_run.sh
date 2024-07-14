@@ -60,7 +60,7 @@ create_docker() {
 }
 
 clean_docker
-docker build -t ssr .
+docker build --no-cache -t ssr .
 
 read -erp "创建容器的数量(默认: 1):" count
 [[ -z ${count} ]] && count=1
