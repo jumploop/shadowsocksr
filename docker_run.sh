@@ -48,7 +48,8 @@ install_docker() {
 }
 
 clean_docker() {
-  docker stop $(docker ps -qa -f name=ssr) && docker rm $(docker ps -qa -f name=ssr) && docker images -q --filter=reference=ssr
+  docker rmi $(docker images -f "dangling=true" -q)
+  docker stop $(docker ps -qa -f name=ssr) && docker rm $(docker ps -qa -f name=ssr) && docker rmi $(docker images -q --filter=reference=ssr)
 }
 
 create_docker() {
