@@ -19,7 +19,7 @@ RUN apk --no-cache add libsodium wget unzip
 RUN apk add -U tzdata && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Shanghai/Asia" > /etc/timezone && apk del tzdata
 
 RUN mkdir -p $WORK && \
-    wget -q --no-check-certificate https://github.com/jumploop/shadowsocksr/archive/$BRANCH.zip -P $WORK && \
+    wget -q --no-check-certificate https://github.com/jumploop/shadowsocksr/archive/refs/heads/$BRANCH.zip -P $WORK && \
     unzip $WORK/$BRANCH.zip -d $WORK && rm -rf $WORK/*.zip
 
 WORKDIR $WORK/shadowsocksr-$BRANCH/shadowsocks
