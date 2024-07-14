@@ -123,7 +123,6 @@ class Encryptor(object):
             return m[2](method, key, iv, op)
         except Exception as e:
             logging.error('exception in encrypting: %s', e)
-            logging.info('start fix this exception')
             common.enable_rc4_legacy()
             return m[2](method, key, iv, op)
 

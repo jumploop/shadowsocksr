@@ -413,6 +413,16 @@ class UDPAsyncDNSHandler(object):
 
 def enable_rc4_legacy():
     openssl_conf = "/etc/ssl/openssl.cnf"
+    std = ['[provider_sect]', 'legacy = legacy_sect', '[legacy_sect]', 'activate = 1']
+    with open(openssl_conf, 'r') as f:
+        for line in f.read().splitlines():
+            if line in std:
+                std.remove(line)
+    if std:
+        modify_config(openssl_conf)
+
+
+def modify_config(openssl_conf):
     with closing(fileinput.input(openssl_conf, inplace=True)) as file:
         for line in file:
             line = line.rstrip()
