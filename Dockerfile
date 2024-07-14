@@ -17,12 +17,13 @@ ARG WORK=/root
 
 RUN apk --no-cache add python3 \
     libsodium \
-    wget
+    wget unzip
 
 RUN apk add -U tzdata && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Shanghai/Asia" > /etc/timezone && apk del tzdata
 
 RUN mkdir -p $WORK && \
-    wget -qO- --no-check-certificate https://github.com/jumploop/shadowsocksr/archive/$BRANCH.tar.gz | tar -xzf - -C $WORK
+    wget -q --no-check-certificate https://github.com/jumploop/shadowsocksr/archive/$BRANCH.zip -P $WORK && \
+    cd $WORK && unzip $BRANCH.zip
 
 
 WORKDIR $WORK/shadowsocksr-$BRANCH/shadowsocks
