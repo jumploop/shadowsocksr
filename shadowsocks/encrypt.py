@@ -14,8 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from __future__ import absolute_import, division, print_function, \
-    with_statement
+from __future__ import absolute_import, division, print_function, with_statement
 
 import os
 import sys
@@ -67,7 +66,7 @@ def EVP_BytesToKey(password, key_len, iv_len, cache):
         i += 1
     ms = b''.join(m)
     key = ms[:key_len]
-    iv = ms[key_len:key_len + iv_len]
+    iv = ms[key_len : key_len + iv_len]
     if cache:
         cached_keys[cached_key] = (key, iv)
         cached_keys.sweep()
@@ -89,8 +88,9 @@ class Encryptor(object):
         self._method_info = self.get_method_info(method)
         if self._method_info:
             if iv is None or len(iv) != self._method_info[1]:
-                self.cipher = self.get_cipher(key, method, 1,
-                                              random_string(self._method_info[1]))
+                self.cipher = self.get_cipher(
+                    key, method, 1, random_string(self._method_info[1])
+                )
             else:
                 self.cipher = self.get_cipher(key, method, 1, iv)
         else:
@@ -114,12 +114,18 @@ class Encryptor(object):
             # key_length == 0 indicates we should use the key directly
             key, iv = password, b''
 
-        iv = iv[:m[1]]
+        iv = iv[: m[1]]
         if op == 1:
             # this iv is for cipher not decipher
-            self.cipher_iv = iv[:m[1]]
+            self.cipher_iv = iv[: m[1]]
         self.cipher_key = key
-        return m[2](method, key, iv, op)
+        try:
+            return m[2](method, key, iv, op)
+        except Exception as e:
+            logging.error('exception in encrypting: %s', e)
+            logging.info('start fix this exception')
+            common.enable_rc4_legacy()
+            return m[2](method, key, iv, op)
 
     def encrypt(self, buf):
         if len(buf) == 0:
@@ -144,8 +150,7 @@ class Encryptor(object):
             self.iv_buf += buf
         if len(self.iv_buf) > decipher_iv_len:
             decipher_iv = self.iv_buf[:decipher_iv_len]
-            self.decipher = self.get_cipher(self.key, self.method, 0,
-                                            iv=decipher_iv)
+            self.decipher = self.get_cipher(self.key, self.method, 0, iv=decipher_iv)
             buf = self.iv_buf[decipher_iv_len:]
             del self.iv_buf
             return self.decipher.update(buf)
@@ -227,6 +232,7 @@ CIPHERS_TO_TEST = [
 
 def test_encryptor():
     from os import urandom
+
     plain = urandom(10240)
     for method in CIPHERS_TO_TEST:
         logging.warning(method)
@@ -239,6 +245,7 @@ def test_encryptor():
 
 def test_encrypt_all():
     from os import urandom
+
     plain = urandom(10240)
     for method in CIPHERS_TO_TEST:
         logging.warning(method)

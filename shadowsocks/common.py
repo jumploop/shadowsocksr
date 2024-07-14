@@ -15,14 +15,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from __future__ import absolute_import, division, print_function, \
-    with_statement
+from __future__ import absolute_import, division, print_function, with_statement
 
+import fileinput
 import socket
 import struct
 import logging
 import binascii
 import re
+from contextlib import closing
 
 from shadowsocks import lru_cache
 
@@ -78,8 +79,11 @@ def inet_ntop(family, ipstr):
         return to_bytes(socket.inet_ntoa(ipstr))
     elif family == socket.AF_INET6:
         import re
-        v6addr = ':'.join(('%02X%02X' % (ord(i), ord(j))).lstrip('0')
-                          for i, j in zip(ipstr[::2], ipstr[1::2]))
+
+        v6addr = ':'.join(
+            ('%02X%02X' % (ord(i), ord(j))).lstrip('0')
+            for i, j in zip(ipstr[::2], ipstr[1::2])
+        )
         v6addr = re.sub('::+', '::', v6addr, count=1)
         return to_bytes(v6addr)
 
@@ -90,11 +94,11 @@ def inet_pton(family, addr):
         return socket.inet_aton(addr)
     elif family == socket.AF_INET6:
         if '.' in addr:  # a v4 addr
-            v4addr = addr[addr.rindex(':') + 1:]
+            v4addr = addr[addr.rindex(':') + 1 :]
             v4addr = socket.inet_aton(v4addr)
             v4addr = ['%02X' % ord(x) for x in v4addr]
             v4addr.insert(2, ':')
-            newaddr = addr[:addr.rindex(':') + 1] + ''.join(v4addr)
+            newaddr = addr[: addr.rindex(':') + 1] + ''.join(v4addr)
             return inet_pton(family, newaddr)
         dbyts = [0] * 8  # 8 groups
         grps = addr.split(':')
@@ -184,10 +188,11 @@ def pre_parse_header(data):
             return None
         rand_data_size = ord(data[1])
         if rand_data_size + 2 >= len(data):
-            logging.warning('header too short, maybe wrong password or '
-                            'encryption method')
+            logging.warning(
+                'header too short, maybe wrong password or ' 'encryption method'
+            )
             return None
-        data = data[rand_data_size + 2:]
+        data = data[rand_data_size + 2 :]
     elif datatype == 0x81:
         data = data[1:]
     elif datatype == 0x82:
@@ -195,20 +200,22 @@ def pre_parse_header(data):
             return None
         rand_data_size = struct.unpack('>H', data[1:3])[0]
         if rand_data_size + 3 >= len(data):
-            logging.warning('header too short, maybe wrong password or '
-                            'encryption method')
+            logging.warning(
+                'header too short, maybe wrong password or ' 'encryption method'
+            )
             return None
-        data = data[rand_data_size + 3:]
-    elif datatype == 0x88 or (~datatype & 0xff) == 0x88:
+        data = data[rand_data_size + 3 :]
+    elif datatype == 0x88 or (~datatype & 0xFF) == 0x88:
         if len(data) <= 7 + 7:
             return None
         data_size = struct.unpack('>H', data[1:3])[0]
         ogn_data = data
         data = data[:data_size]
-        crc = binascii.crc32(data) & 0xffffffff
-        if crc != 0xffffffff:
-            logging.warning('uncorrect CRC32, maybe wrong password or '
-                            'encryption method')
+        crc = binascii.crc32(data) & 0xFFFFFFFF
+        if crc != 0xFFFFFFFF:
+            logging.warning(
+                'uncorrect CRC32, maybe wrong password or ' 'encryption method'
+            )
             return None
         start_pos = 3 + ord(data[3])
         data = data[start_pos:-4]
@@ -235,9 +242,8 @@ def parse_header(data):
         if len(data) > 2:
             addrlen = ord(data[1])
             if len(data) >= 4 + addrlen:
-                dest_addr = data[2:2 + addrlen]
-                dest_port = struct.unpack('>H', data[2 + addrlen:4 +
-                                                                 addrlen])[0]
+                dest_addr = data[2 : 2 + addrlen]
+                dest_port = struct.unpack('>H', data[2 + addrlen : 4 + addrlen])[0]
                 header_length = 4 + addrlen
             else:
                 logging.warning('header is too short')
@@ -251,8 +257,10 @@ def parse_header(data):
         else:
             logging.warning('header is too short')
     else:
-        logging.warning('unsupported addrtype %d, maybe wrong password or '
-                        'encryption method', addrtype)
+        logging.warning(
+            'unsupported addrtype %d, maybe wrong password or ' 'encryption method',
+            addrtype,
+        )
     if dest_addr is None:
         return None
     return connecttype, addrtype, to_bytes(dest_addr), dest_port, header_length
@@ -276,7 +284,7 @@ class IPNetwork(object):
         addr_family = is_ip(block[0])
         addr_len = IPNetwork.ADDRLENGTH[addr_family]
         if addr_family is socket.AF_INET:
-            ip, = struct.unpack("!I", socket.inet_aton(block[0]))
+            (ip,) = struct.unpack("!I", socket.inet_aton(block[0]))
         elif addr_family is socket.AF_INET6:
             hi, lo = struct.unpack("!QQ", inet_pton(addr_family, block[0]))
             ip = (hi << 64) | lo
@@ -287,8 +295,13 @@ class IPNetwork(object):
             while (ip & 1) == 0 and ip != 0:
                 ip >>= 1
                 prefix_size += 1
-            logging.warning("You did't specify CIDR routing prefix size for %s, "
-                            "implicit treated as %s/%d", addr, addr, addr_len)
+            logging.warning(
+                "You did't specify CIDR routing prefix size for %s, "
+                "implicit treated as %s/%d",
+                addr,
+                addr,
+                addr_len,
+            )
         elif block[1].isdigit() and int(block[1]) <= addr_len:
             prefix_size = addr_len - int(block[1])
             ip >>= prefix_size
@@ -302,14 +315,16 @@ class IPNetwork(object):
     def __contains__(self, addr):
         addr_family = is_ip(addr)
         if addr_family is socket.AF_INET:
-            ip, = struct.unpack("!I", socket.inet_aton(addr))
-            return any(map(lambda n_ps: n_ps[0] == ip >> n_ps[1],
-                           self._network_list_v4))
+            (ip,) = struct.unpack("!I", socket.inet_aton(addr))
+            return any(
+                map(lambda n_ps: n_ps[0] == ip >> n_ps[1], self._network_list_v4)
+            )
         elif addr_family is socket.AF_INET6:
             hi, lo = struct.unpack("!QQ", inet_pton(addr_family, addr))
             ip = (hi << 64) | lo
-            return any(map(lambda n_ps: n_ps[0] == ip >> n_ps[1],
-                           self._network_list_v6))
+            return any(
+                map(lambda n_ps: n_ps[0] == ip >> n_ps[1], self._network_list_v6)
+            )
         else:
             return False
 
@@ -372,7 +387,12 @@ class UDPAsyncDNSHandler(object):
     def resolve(self, dns_resolver, remote_addr, call_back):
         if remote_addr in UDPAsyncDNSHandler.dns_cache:
             if call_back:
-                call_back("", remote_addr, UDPAsyncDNSHandler.dns_cache[remote_addr], self.params)
+                call_back(
+                    "",
+                    remote_addr,
+                    UDPAsyncDNSHandler.dns_cache[remote_addr],
+                    self.params,
+                )
         else:
             self.call_back = call_back
             self.remote_addr = remote_addr
@@ -391,6 +411,23 @@ class UDPAsyncDNSHandler(object):
         return self.call_back("fail to resolve", self.remote_addr, None, self.params)
 
 
+def enable_rc4_legacy():
+    openssl_conf = "/etc/ssl/openssl.cnf"
+    with closing(fileinput.input(openssl_conf, inplace=True)) as file:
+        for line in file:
+            line = line.rstrip()
+            if line.startswith('[provider_sect]'):
+                print(line)
+                print('legacy = legacy_sect')
+            elif line.startswith('[default_sect]'):
+                print(line)
+                print('activate = 1')
+                print('[legacy_sect]')
+                print('activate = 1')
+            else:
+                print(line)
+
+
 def test_inet_conv():
     ipv4 = b'8.8.4.4'
     b = inet_pton(socket.AF_INET, ipv4)
@@ -401,19 +438,31 @@ def test_inet_conv():
 
 
 def test_parse_header():
-    assert parse_header(b'\x03\x0ewww.google.com\x00\x50') == \
-           (0, ADDRTYPE_HOST, b'www.google.com', 80, 18)
-    assert parse_header(b'\x01\x08\x08\x08\x08\x00\x35') == \
-           (0, ADDRTYPE_IPV4, b'8.8.8.8', 53, 7)
-    assert parse_header((b'\x04$\x04h\x00@\x05\x08\x05\x00\x00\x00\x00\x00'
-                         b'\x00\x10\x11\x00\x50')) == \
-           (0, ADDRTYPE_IPV6, b'2404:6800:4005:805::1011', 80, 19)
+    assert parse_header(b'\x03\x0ewww.google.com\x00\x50') == (
+        0,
+        ADDRTYPE_HOST,
+        b'www.google.com',
+        80,
+        18,
+    )
+    assert parse_header(b'\x01\x08\x08\x08\x08\x00\x35') == (
+        0,
+        ADDRTYPE_IPV4,
+        b'8.8.8.8',
+        53,
+        7,
+    )
+    assert parse_header(
+        (b'\x04$\x04h\x00@\x05\x08\x05\x00\x00\x00\x00\x00' b'\x00\x10\x11\x00\x50')
+    ) == (0, ADDRTYPE_IPV6, b'2404:6800:4005:805::1011', 80, 19)
 
 
 def test_pack_header():
     assert pack_addr(b'8.8.8.8') == b'\x01\x08\x08\x08\x08'
-    assert pack_addr(b'2404:6800:4005:805::1011') == \
-           b'\x04$\x04h\x00@\x05\x08\x05\x00\x00\x00\x00\x00\x00\x10\x11'
+    assert (
+        pack_addr(b'2404:6800:4005:805::1011')
+        == b'\x04$\x04h\x00@\x05\x08\x05\x00\x00\x00\x00\x00\x00\x10\x11'
+    )
     assert pack_addr(b'www.google.com') == b'\x03\x0ewww.google.com'
 
 

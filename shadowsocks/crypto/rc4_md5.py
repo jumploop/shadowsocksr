@@ -14,46 +14,22 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from __future__ import absolute_import, division, print_function, \
-    with_statement
+from __future__ import absolute_import, division, print_function, with_statement
 
-import fileinput
 import hashlib
 import logging
-from contextlib import closing
 
 from shadowsocks.crypto import openssl
 
 __all__ = ['ciphers']
 
-def enable_rc4_legacy():
-    openssl_conf = "/etc/ssl/openssl.cnf"
-    with closing(fileinput.input(openssl_conf, inplace=True)) as file:
-        for line in file:
-            line = line.rstrip()
-            if line.startswith('[provider_sect]'):
-                print(line)
-                print('legacy = legacy_sect')
-            elif line.startswith('[default_sect]'):
-                print(line)
-                print('activate = 1')
-                print('[legacy_sect]')
-                print('activate = 1')
-            else:
-                print(line)
 
-def create_cipher(alg, key, iv, op, key_as_bytes=0, d=None, salt=None,
-                  i=1, padding=1):
+def create_cipher(alg, key, iv, op, key_as_bytes=0, d=None, salt=None, i=1, padding=1):
     md5 = hashlib.md5()
     md5.update(key)
     md5.update(iv)
     rc4_key = md5.digest()
-    try:
-        return openssl.OpenSSLCrypto(b'rc4', rc4_key, b'', op)
-    except Exception as e:
-        logging.error('Error creating cipher:%s', e)
-        enable_rc4_legacy()
-        return openssl.OpenSSLCrypto(b'rc4', rc4_key, b'', op)
+    return openssl.OpenSSLCrypto(b'rc4', rc4_key, b'', op)
 
 
 ciphers = {
