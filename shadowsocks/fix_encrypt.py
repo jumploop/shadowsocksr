@@ -5,6 +5,8 @@ from __future__ import absolute_import, division, print_function, with_statement
 import fileinput
 from contextlib import closing
 
+from shadowsocks import encrypt_test
+
 
 def enable_rc4_legacy():
     openssl_conf = "/etc/ssl/openssl.cnf"
@@ -33,5 +35,12 @@ def modify_config(openssl_conf):
                 print(line)
 
 
+def main():
+    try:
+        encrypt_test.main()
+    except Exception as e:
+        enable_rc4_legacy()
+
+
 if __name__ == '__main__':
-    enable_rc4_legacy()
+    main()
