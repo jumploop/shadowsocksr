@@ -8,6 +8,10 @@ from contextlib import closing
 import encrypt_test
 
 # https://blog.vinsonws.cn/2023/05/25/openssl-openssl3-%E5%A6%82%E4%BD%95%E5%BC%80%E5%90%AF-rc4-md5-%E6%94%AF%E6%8C%81/
+# 如果发现改完还是不行的话，尝试使用openssl version -d来确认修改的配置文件在该目录下
+#
+# Ref:
+# https://www.practicalnetworking.net/practical-tls/openssl-3-and-legacy-providers/
 def enable_rc4_legacy():
     openssl_conf = "/etc/ssl/openssl.cnf"
     std = ['[provider_sect]', 'legacy = legacy_sect', '[legacy_sect]', 'activate = 1']
