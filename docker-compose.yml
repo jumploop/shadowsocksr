@@ -1,0 +1,18 @@
+services:
+  shadowsocksr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+#    image: looprt/shadowsocksr:latest
+    container_name: ssr
+    restart: unless-stopped
+    volumes:
+      - ./user-config.json:/etc/shadowsocksr/user-config.json
+    ports:
+      - ${PORT}:${PORT}
+    environment:
+      - SERVER_PORT=${PORT}
+      - PASSWORD=${PASSWORD}
+      - METHOD=${METHOD}
+      - PROTOCOL=${PROTOCOL}
+      - OBFS=${OBFS}
