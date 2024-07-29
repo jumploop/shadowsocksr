@@ -6,6 +6,7 @@ red='\033[0;31m'
 green='\033[0;32m'
 yellow='\033[0;33m'
 plain='\033[0m'
+export PATH=$PATH:/usr/local/bin
 
 install_soft() {
   (command -v yum >/dev/null 2>&1 && yum install "$*" -y) ||
@@ -42,6 +43,19 @@ install_docker() {
   else
     echo -e "${green}Docker${plain} 已安装"
 
+  fi
+  command -v docker-compose >/dev/null 2>&1
+  if [[ $? != 0 ]]; then
+    echo -e "正在安装 Docker Compose"
+    wget --no-check-certificate -O /usr/local/bin/docker-compose "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" >/dev/null 2>&1
+    if [[ $? != 0 ]]; then
+      echo -e "${red}下载Compose失败${plain}"
+      return 0
+    fi
+    chmod +x /usr/local/bin/docker-compose
+    echo -e "${green}Docker Compose${plain} 安装成功"
+  else
+    echo -e "${green}Docker Compose${plain} 已安装"
   fi
 }
 
@@ -105,7 +119,7 @@ main() {
   clean_docker
   create_docker_file
   create_docker_image
-  
+
   read -erp "创建容器的数量(默认: 1):" count
   [[ -z ${count} ]] && count=1
   number=1

@@ -186,12 +186,12 @@ Set_config_all() {
 }
 
 modify_config() {
-    echo -e "请确认以下 ShadowsocksR账号信息是否正确:"
     sed -i "s/\${PORT}/${ssr_port}/g" docker-compose.yml
     sed -i "s/\${PASSWORD}/${ssr_password}/" docker-compose.yml
     sed -i "s/\${METHOD}/${ssr_method}/" docker-compose.yml
     sed -i "s/\${PROTOCOL}/${ssr_protocol}/" docker-compose.yml
     sed -i "s/\${OBFS}/${ssr_obfs}/" docker-compose.yml
+    sed -i 's#//.*mode$##g' user-config.json
 
 }
 # 获取 IP 并显示
