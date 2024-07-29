@@ -199,6 +199,10 @@ get_ip() {
     ip="$(curl -s https://api.ipify.org | head -n 1)"
 }
 
+check_root() {
+    [[ $EUID != 0 ]] && echo -e "${Error} 当前账号非ROOT(或没有ROOT权限)，无法继续操作，请使用${Green_background_prefix} sudo su ${Font_color_suffix}来获取临时ROOT权限（执行后会提示输入当前账号的密码）。" && exit 1
+}
+
 # 显示 配置信息
 View_User() {
     get_ip
@@ -216,6 +220,7 @@ View_User() {
     echo && echo "==================================================="
 }
 main() {
+    check_root
     echo -e "${Info} 开始设置 ShadowsocksR账号配置..."
     cd $WORKDIR || exit
     wget --no-check-certificate -O docker-compose.yml ${GITHUB_RAW_URL}/docker-compose.yml >/dev/null 2>&1

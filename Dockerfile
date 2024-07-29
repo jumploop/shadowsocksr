@@ -34,7 +34,7 @@ RUN mkdir -p $CONFIG_DIR \
     && echo '"redirect": "",'>>$CONFIG_USER_FILE\
     && echo '"fast_open": false'>>$CONFIG_USER_FILE\
     && echo '}' '>>$CONFIG_USER_FILE
-}
+
 RUN apk --no-cache add -U libsodium wget unzip tzdata \
     && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo "Shanghai/Asia" > /etc/timezone \
