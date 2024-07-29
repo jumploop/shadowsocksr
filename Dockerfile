@@ -10,32 +10,31 @@ ARG BRANCH=manyuser
 ARG WORK=/root
 
 RUN mkdir -p $CONFIG_DIR \
-    && cat >$CONFIG_USER_FILE <<-EOF
-{
-    "server": "0.0.0.0",
-    "server_ipv6": "::",
-    "server_port": ${SERVER_PORT},
-    "local_address": "127.0.0.1",
-    "local_port": 1080,
-
-    "password": "${PASSWORD}",
-    "method": "${METHOD}",
-    "protocol": "${PROTOCOL}",
-    "protocol_param": "",
-    "obfs": "${OBFS}",
-    "obfs_param": "",
-    "speed_limit_per_con": 0,
-    "speed_limit_per_user": 0,
-
-    "additional_ports" : {},
-    "timeout": 120,
-    "udp_timeout": 60,
-    "dns_ipv6": false,
-    "connect_verbose_info": 0,
-    "redirect": "",
-    "fast_open": false
+    && echo '{' >$CONFIG_USER_FILE\
+    && echo '' >>$CONFIG_USER_FILE\
+    && echo '"server": "0.0.0.0",'>>$CONFIG_USER_FILE\
+    && echo '"server_ipv6": "::",'>>$CONFIG_USER_FILE\
+    && echo '"server_port": ${SERVER_PORT},'>>$CONFIG_USER_FILE\
+    && echo '"local_address": "127.0.0.1",'>>$CONFIG_USER_FILE\
+    && echo '"local_port": 1080,'>>$CONFIG_USER_FILE\
+    && echo '' >>$CONFIG_USER_FILE\
+    && echo '"password": "${PASSWORD}",'>>$CONFIG_USER_FILE\
+    && echo '"method": "${METHOD}",'>>$CONFIG_USER_FILE\
+    && echo '"protocol": "${PROTOCOL}",'>>$CONFIG_USER_FILE\
+    && echo '"protocol_param": "",'>>$CONFIG_USER_FILE\
+    && echo '"obfs": "${OBFS}",'>>$CONFIG_USER_FILE\
+    && echo '"obfs_param": "",'>>$CONFIG_USER_FILE\
+    && echo '"speed_limit_per_con": 0,'>>$CONFIG_USER_FILE\
+    && echo '"speed_limit_per_user": 0,'>>$CONFIG_USER_FILE\
+    && echo '"additional_ports" : {},'>>$CONFIG_USER_FILE\
+    && echo '"timeout": 120,'>>$CONFIG_USER_FILE\
+    && echo '"udp_timeout": 60,'>>$CONFIG_USER_FILE\
+    && echo '"dns_ipv6": false,'>>$CONFIG_USER_FILE\
+    && echo '"connect_verbose_info": 0,'>>$CONFIG_USER_FILE\
+    && echo '"redirect": "",'>>$CONFIG_USER_FILE\
+    && echo '"fast_open": false'>>$CONFIG_USER_FILE\
+    && echo '}' '>>$CONFIG_USER_FILE
 }
-EOF
 RUN apk --no-cache add -U libsodium wget unzip tzdata \
     && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo "Shanghai/Asia" > /etc/timezone \
