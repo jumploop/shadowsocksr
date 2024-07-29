@@ -31,9 +31,7 @@ install_docker() {
   if [[ $? != 0 ]]; then
     install_base
     echo -e "正在安装 Docker"
-    curl -sLo install.sh https://get.docker.com
-    bash install.sh >/dev/null 2>&1
-    # bash <(curl -sL https://get.docker.com) >/dev/null 2>&1
+    bash <(curl -sL https://get.docker.com) >/dev/null 2>&1
     if [[ $? != 0 ]]; then
       echo -e "${red}下载Docker失败${plain}"
       exit 1
@@ -47,32 +45,80 @@ install_docker() {
   fi
 }
 
-clean_docker() {
-  docker rmi -f $(docker images -f "dangling=true" -q)
-  docker stop $(docker ps -qa -f name=ssr) && docker rm $(docker ps -qa -f name=ssr) && docker rmi $(docker images -q --filter=reference=ssr)
+create_docker_file() {
+  echo "creating Dockerfile"
+  cat >Dockerfile <<-EOF
+FROM python:alpine
+
+ENV SERVER_ADDR     0.0.0.0
+ENV SERVER_PORT     51348
+ENV PASSWORD        jumploop
+ENV METHOD          none
+ENV PROTOCOL        auth_chain_a
+ENV PROTOCOLPARAM   32
+ENV OBFS            plain
+ENV TIMEOUT         300
+ENV DNS_ADDR        8.8.8.8
+ENV DNS_ADDR_2      8.8.4.4
+
+ARG BRANCH=manyuser
+ARG WORK=/root
+
+
+RUN apk --no-cache add -U libsodium wget unzip
+RUN apk --no-cache add -U tzdata && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Shanghai/Asia" > /etc/timezone && apk del tzdata
+
+RUN mkdir -p $WORK && \
+    wget -q --no-check-certificate https://github.com/jumploop/shadowsocksr/archive/refs/heads/$BRANCH.zip -P $WORK && \
+    unzip $WORK/$BRANCH.zip -d $WORK && rm -rf $WORK/*.zip
+
+WORKDIR $WORK/shadowsocksr-$BRANCH/shadowsocks
+
+RUN python3 fix_encrypt.py
+
+EXPOSE $SERVER_PORT
+CMD python3 server.py -p $SERVER_PORT -k $PASSWORD -m $METHOD -O $PROTOCOL -o $OBFS
+EOF
 }
 
-create_docker() {
+clean_docker() {
+  docker rmi -f "$(docker images -f "dangling=true" -q)"
+  docker stop "$(docker ps -qa -f name=ssr)" && docker rm "$(docker ps -qa -f name=ssr)" && docker rmi "$(docker images -q --filter=reference=ssr)"
+}
+
+create_docker_container() {
   local port
   port=$1
   docker run -d -p "$port":$SERVER_PORT --restart=always --name ssr${number} ssr
   echo "container map port=$port"
 }
 
-clean_docker
-docker build --no-cache -t ssr .
+create_docker_image() {
 
-read -erp "创建容器的数量(默认: 1):" count
-[[ -z ${count} ]] && count=1
+  echo "creating docker image"
+  docker build --no-cache -t ssr .
+  echo "create docker image successfully"
+}
 
-number=1
-while [ "$number" -le "$count" ]; do
-  echo "creating the number $number container"
-  if [ "$count" -eq 1 ]; then
-    PORT=$SERVER_PORT
-  else
-    PORT=$(python -c 'import random;print(random.randint(10000, 65536))')
-  fi
-  create_docker "$PORT"
-  number=$((number + 1))
-done
+main() {
+  install_docker
+  clean_docker
+  create_docker_file
+  create_docker_image
+  
+  read -erp "创建容器的数量(默认: 1):" count
+  [[ -z ${count} ]] && count=1
+  number=1
+  while [ "$number" -le "$count" ]; do
+    echo "creating the number $number container"
+    if [ "$count" -eq 1 ]; then
+      PORT=$SERVER_PORT
+    else
+      PORT=$(python -c 'import random;print(random.randint(10000, 65536))')
+    fi
+    create_docker_container "$PORT"
+    number=$((number + 1))
+  done
+}
+
+main
