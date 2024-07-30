@@ -82,16 +82,16 @@ ARG WORK=/root
 RUN apk --no-cache add -U libsodium wget unzip
 RUN apk --no-cache add -U tzdata && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Shanghai/Asia" > /etc/timezone && apk del tzdata
 
-RUN mkdir -p $WORK && \
-    wget -q --no-check-certificate https://github.com/jumploop/shadowsocksr/archive/refs/heads/$BRANCH.zip -P $WORK && \
-    unzip $WORK/$BRANCH.zip -d $WORK && rm -rf $WORK/*.zip
+RUN mkdir -p \$WORK && \
+    wget -q --no-check-certificate https://github.com/jumploop/shadowsocksr/archive/refs/heads/\$BRANCH.zip -P \$WORK && \
+    unzip \$WORK/\$BRANCH.zip -d \$WORK && rm -rf \$WORK/*.zip
 
-WORKDIR $WORK/shadowsocksr-$BRANCH/shadowsocks
+WORKDIR \$WORK/shadowsocksr-\$BRANCH/shadowsocks
 
 RUN python3 fix_encrypt.py
 
-EXPOSE $SERVER_PORT
-CMD python3 server.py -p $SERVER_PORT -k $PASSWORD -m $METHOD -O $PROTOCOL -o $OBFS
+EXPOSE \$SERVER_PORT
+CMD python3 server.py -p \$SERVER_PORT -k \$PASSWORD -m \$METHOD -O \$PROTOCOL -o \$OBFS
 EOF
 }
 
