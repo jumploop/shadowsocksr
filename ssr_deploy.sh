@@ -251,6 +251,10 @@ View_User() {
 }
 main() {
     check_root
+    if [ "$(docker ps -q -f name=ssr)" ]; then
+        docker stop "$(docker ps -qa -f name=ssr)" && docker rm "$(docker ps -qa -f name=ssr)"
+        echo -e "${Green_font_prefix}bot4sss${Font_color_suffix} 已停止"
+    fi
     echo -e "${Info} 开始设置 ShadowsocksR账号配置..."
     cd $WORKDIR || exit
     wget --no-check-certificate -O docker-compose.yml ${GITHUB_RAW_URL}/docker-compose.yml >/dev/null 2>&1
