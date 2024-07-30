@@ -185,6 +185,36 @@ Set_config_all() {
     Set_config_obfs
 }
 
+# 写入 配置信息
+Write_configuration() {
+    cat >user-config.json <<-EOF
+{
+    "server": "0.0.0.0",
+    "server_ipv6": "::",
+    "server_port": ${ssr_port},
+    "local_address": "127.0.0.1",
+    "local_port": 1080,
+
+    "password": "${ssr_password}",
+    "method": "${ssr_method}",
+    "protocol": "${ssr_protocol}",
+    "protocol_param": "",
+    "obfs": "${ssr_obfs}",
+    "obfs_param": "",
+    "speed_limit_per_con": 0,
+    "speed_limit_per_user": 0,
+
+    "additional_ports" : {},
+    "timeout": 120,
+    "udp_timeout": 60,
+    "dns_ipv6": false,
+    "connect_verbose_info": 0,
+    "redirect": "",
+    "fast_open": false
+}
+EOF
+}
+
 modify_config() {
     sed -i "s/\${PORT}/${ssr_port}/g" docker-compose.yml
     sed -i "s/\${PASSWORD}/${ssr_password}/" docker-compose.yml

@@ -9,31 +9,8 @@ ARG CONFIG_USER_FILE=/etc/shadowsocksr/user-config.json
 ARG BRANCH=manyuser
 ARG WORK=/root
 
-RUN mkdir -p $CONFIG_DIR \
-    && echo '{' >$CONFIG_USER_FILE\
-    && echo '' >>$CONFIG_USER_FILE\
-    && echo '"server": "0.0.0.0",'>>$CONFIG_USER_FILE\
-    && echo '"server_ipv6": "::",'>>$CONFIG_USER_FILE\
-    && echo '"server_port": ${SERVER_PORT},'>>$CONFIG_USER_FILE\
-    && echo '"local_address": "127.0.0.1",'>>$CONFIG_USER_FILE\
-    && echo '"local_port": 1080,'>>$CONFIG_USER_FILE\
-    && echo '' >>$CONFIG_USER_FILE\
-    && echo '"password": "${PASSWORD}",'>>$CONFIG_USER_FILE\
-    && echo '"method": "${METHOD}",'>>$CONFIG_USER_FILE\
-    && echo '"protocol": "${PROTOCOL}",'>>$CONFIG_USER_FILE\
-    && echo '"protocol_param": "",'>>$CONFIG_USER_FILE\
-    && echo '"obfs": "${OBFS}",'>>$CONFIG_USER_FILE\
-    && echo '"obfs_param": "",'>>$CONFIG_USER_FILE\
-    && echo '"speed_limit_per_con": 0,'>>$CONFIG_USER_FILE\
-    && echo '"speed_limit_per_user": 0,'>>$CONFIG_USER_FILE\
-    && echo '"additional_ports" : {},'>>$CONFIG_USER_FILE\
-    && echo '"timeout": 120,'>>$CONFIG_USER_FILE\
-    && echo '"udp_timeout": 60,'>>$CONFIG_USER_FILE\
-    && echo '"dns_ipv6": false,'>>$CONFIG_USER_FILE\
-    && echo '"connect_verbose_info": 0,'>>$CONFIG_USER_FILE\
-    && echo '"redirect": "",'>>$CONFIG_USER_FILE\
-    && echo '"fast_open": false'>>$CONFIG_USER_FILE\
-    && echo '}' '>>$CONFIG_USER_FILE
+RUN mkdir -p $CONFIG_DIR
+COPY ./user-config.json   $CONFIG_DIR
 
 RUN apk --no-cache add -U libsodium wget unzip tzdata \
     && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
