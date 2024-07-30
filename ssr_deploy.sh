@@ -260,6 +260,7 @@ main() {
     wget --no-check-certificate -O docker-compose.yml ${GITHUB_RAW_URL}/docker-compose.yml >/dev/null 2>&1
     wget --no-check-certificate -O Dockerfile ${GITHUB_RAW_URL}/Dockerfile >/dev/null 2>&1
     Set_config_all
+    Write_configuration
     modify_config
     View_User
     echo -e "> 启动SSR"
