@@ -259,7 +259,6 @@ main() {
     cd $WORKDIR || exit
     wget --no-check-certificate -O docker-compose.yml ${GITHUB_RAW_URL}/docker-compose.yml >/dev/null 2>&1
     wget --no-check-certificate -O Dockerfile ${GITHUB_RAW_URL}/Dockerfile >/dev/null 2>&1
-    [ ! -e user-config.json ] && wget --no-check-certificate -O user-config.json ${GITHUB_RAW_URL}/config.json >/dev/null 2>&1
     Set_config_all
     modify_config
     View_User
