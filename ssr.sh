@@ -733,6 +733,9 @@ shutdown_firewalld() {
     else
       echo -e "${Info} 防火墙已关闭..."
     fi
+  else
+    # Debian/Ubuntu 使用ufw
+    ufw disable
   fi
 }
 Install_SSR() {
