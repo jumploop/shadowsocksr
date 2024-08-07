@@ -44,7 +44,7 @@ def exe_command(cmdstr, timeout=1800, shell=False):
 def enable_rc4_legacy():
     openssl_conf = "/etc/ssl/openssl.cnf"
     try:
-        code, result = exe_command('opensslh version -d')
+        code, result = exe_command('openssl version -d')
         if result.startswith('OPENSSLDIR'):
             openssl_conf = os.path.join(result.split()[-1].strip('"'), 'openssl.cnf')
     except Exception as e:
