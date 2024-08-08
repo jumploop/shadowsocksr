@@ -808,8 +808,11 @@ Uninstall_SSR() {
       systemctl stop ssr
       systemctl disable ssr
     else
-      update-rc.d -f ssr remove
+#      update-rc.d -f ssr remove
+      systemctl stop ssr
+      systemctl disable ssr
     fi
+    rm -rf /usr/lib/systemd/system/ssr.service
     rm -rf ${ssr_folder} && rm -rf ${config_folder} && rm -rf /etc/init.d/ssr
     echo && echo " ShadowsocksR 卸载完成 !" && echo
   else
