@@ -2,12 +2,10 @@
 # -*- coding: utf-8
 from __future__ import absolute_import, division, print_function, with_statement
 
-import fileinput
 import logging
 import os
 import shlex
 import subprocess
-from contextlib import closing
 from threading import Timer
 
 import encrypt_test
@@ -27,14 +25,18 @@ def exe_command(cmdstr, timeout=1800, shell=False):
         command = cmdstr
     else:
         command = shlex.split(cmdstr)
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell)
+    process = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell
+    )
     timer = Timer(timeout, process.kill)
     try:
         timer.start()
         stdout, stderr = process.communicate()
         retcode = process.poll()
         result = (stdout + stderr).strip()
-        shellresult = result if isinstance(result, str) else str(result, encoding='utf-8')
+        shellresult = (
+            result if isinstance(result, str) else str(result, encoding='utf-8')
+        )
         logging.info('execute shell [%s], shell result is\n%s', cmdstr, shellresult)
         return retcode, shellresult
     finally:
@@ -50,29 +52,23 @@ def enable_rc4_legacy():
     except Exception as e:
         logging.error('execute shell failed: %s', e)
     logging.info('openssl config file %s', openssl_conf)
-    std = ['[provider_sect]', 'legacy = legacy_sect', '[legacy_sect]', 'activate = 1']
-    with open(openssl_conf, 'r') as f:
-        for line in f.read().splitlines():
-            if line in std:
-                std.remove(line)
-    if std:
-        modify_config(openssl_conf)
-
-
-def modify_config(openssl_conf):
-    with closing(fileinput.input(openssl_conf, inplace=True)) as file:
-        for line in file:
-            line = line.rstrip()
-            if line.startswith('[provider_sect]'):
-                print(line)
-                print('legacy = legacy_sect')
-            elif line.startswith('[default_sect]'):
-                print(line)
-                print('activate = 1')
-                print('[legacy_sect]')
-                print('activate = 1')
-            else:
-                print(line)
+    items = {
+        '[openssl_init]': 'providers = provider_sect',
+        '[provider_sect]': 'legacy = legacy_sect',
+        '[default_sect]': 'activate = 1',
+        '[legacy_sect]': 'activate = 1',
+    }
+    with open(openssl_conf) as f:
+        lines = f.read().splitlines()
+    for key, value in items.items():
+        if key in lines:
+            index = lines.index(key)
+            lines.insert(index, value)
+        else:
+            lines.append(key)
+            lines.append(value)
+    with open(openssl_conf, 'w') as f:
+        f.write('\n'.join(lines))
 
 
 def main():
