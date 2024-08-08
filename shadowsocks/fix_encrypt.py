@@ -7,7 +7,7 @@ import os
 import shlex
 import subprocess
 from threading import Timer
-
+from fileinput import input
 import encrypt_test
 
 logging.basicConfig(level=logging.INFO)
@@ -52,23 +52,26 @@ def enable_rc4_legacy():
     except Exception as e:
         logging.error('execute shell failed: %s', e)
     logging.info('openssl config file %s', openssl_conf)
-    items = {
+    std = {
         '[openssl_init]': 'providers = provider_sect',
         '[provider_sect]': 'legacy = legacy_sect',
         '[default_sect]': 'activate = 1',
         '[legacy_sect]': 'activate = 1',
     }
-    with open(openssl_conf) as f:
-        lines = f.read().splitlines()
-    for key, value in items.items():
-        if key in lines:
-            index = lines.index(key)
-            lines.insert(index, value)
+    # insert or append items to openssl.cnf file
+    for line in input(openssl_conf,inplace=True):
+        line=line.rstrip()
+        if line in std:
+            print(line)
+            print(std[line])
+            std.pop(line)
         else:
-            lines.append(key)
-            lines.append(value)
-    with open(openssl_conf, 'w') as f:
-        f.write('\n'.join(lines))
+            print(line)
+    if std:
+        with open(openssl_conf, 'a') as f:
+            for k, v in std.items():
+                f.write('{0}\n'.format(k))
+                f.write('{0}\n'.format(v))
 
 
 def main():
