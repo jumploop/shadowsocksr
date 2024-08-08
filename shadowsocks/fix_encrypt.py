@@ -54,7 +54,7 @@ def enable_rc4_legacy():
     logging.info('openssl config file %s', openssl_conf)
     std = {
         '[openssl_init]': 'providers = provider_sect',
-        '[provider_sect]': 'legacy = legacy_sect',
+        '[provider_sect]': 'default = default_sect\nlegacy = legacy_sect',
         '[default_sect]': 'activate = 1',
         '[legacy_sect]': 'activate = 1',
     }
