@@ -613,7 +613,7 @@ Centos_yum() {
 }
 Debian_apt() {
   apt-get update
-  apt-get install -y bash-completion
+  apt-get install -y bash-completion iptables-services
   if grep "9\..*" /etc/issue >/dev/null; then
     apt-get install -y vim unzip net-tools
   else
