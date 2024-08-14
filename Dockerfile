@@ -20,7 +20,8 @@ RUN apk --no-cache add -U libsodium wget unzip tzdata \
 RUN mkdir -p $WORK  \
     && wget -q --no-check-certificate https://github.com/jumploop/shadowsocksr/archive/refs/heads/$BRANCH.zip -P $WORK  \
     && unzip $WORK/$BRANCH.zip -d $WORK \
-    && rm -rf $WORK/*.zip
+    && rm -rf $WORK/*.zip \
+    && ln -sf /dev/null /var/log/ssserver.log
 
 WORKDIR $WORK/shadowsocksr-$BRANCH/shadowsocks
 
