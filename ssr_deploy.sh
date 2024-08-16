@@ -249,12 +249,18 @@ View_User() {
     echo -e " 端口总限速 : ${Green_font_prefix}0 KB/S${Font_color_suffix}"
     echo && echo "==================================================="
 }
-main() {
-    check_root
+
+clean_images() {
     if [ "$(docker ps -q -f name=ssr)" ]; then
         docker stop "$(docker ps -qa -f name=ssr)" && docker rm "$(docker ps -qa -f name=ssr)"
         echo -e "${Green_font_prefix}bot4sss${Font_color_suffix} 已停止"
     fi
+    docker system prune -f --all
+
+}
+main() {
+    check_root
+    clean_images
     echo -e "${Info} 开始设置 ShadowsocksR账号配置..."
     cd $WORKDIR || exit
     wget --no-check-certificate -O docker-compose.yml ${GITHUB_RAW_URL}/docker-compose.yml >/dev/null 2>&1
