@@ -8,6 +8,9 @@ Green_font_prefix="\033[32m" && Red_font_prefix="\033[31m" && Green_background_p
 Info="${Green_font_prefix}[信息]${Font_color_suffix}"
 Error="${Red_font_prefix}[错误]${Font_color_suffix}"
 Tip="${Green_font_prefix}[注意]${Font_color_suffix}"
+red='\033[0;31m'
+green='\033[0;32m'
+plain='\033[0m'
 Separator_1="——————————————————————————————"
 
 Set_config_port() {
@@ -258,9 +261,75 @@ clean_images() {
     docker system prune -f --all
 
 }
+
+pre_check() {
+    command -v systemctl >/dev/null 2>&1
+    if [[ $? != 0 ]]; then
+        echo "不支持此系统：未找到 systemctl 命令"
+        exit 1
+    fi
+
+    # check root
+    [[ $EUID -ne 0 ]] && echo -e "${red}错误: ${plain} 必须使用root用户运行此脚本！\n" && exit 1
+}
+
+install_soft() {
+    (command -v yum >/dev/null 2>&1 && yum install "$*" -y) ||
+        (command -v apt >/dev/null 2>&1 && apt install "$*" -y) ||
+        (command -v pacman >/dev/null 2>&1 && pacman -Syu "$*") ||
+        (command -v apt-get >/dev/null 2>&1 && apt-get install "$*" -y)
+
+    if [[ $? != 0 ]]; then
+        echo -e "${red}安装基础软件失败，稍等会${plain}"
+        exit 1
+    fi
+
+    (command -v pip3 >/dev/null 2>&1 && pip3 install requests)
+}
+
+install_base() {
+    (command -v curl >/dev/null 2>&1 && command -v wget >/dev/null 2>&1 && command -v pip3 >/dev/null 2>&1) || install_soft curl wget python3-pip python3
+}
+
+install_docker() {
+    install_base
+    command -v docker >/dev/null 2>&1
+    if [[ $? != 0 ]]; then
+        install_base
+        echo -e "正在安装 Docker"
+        bash <(curl -sL https://get.docker.com) >/dev/null 2>&1
+        if [[ $? != 0 ]]; then
+            echo -e "${red}下载Docker失败${plain}"
+            exit 1
+        fi
+        systemctl enable docker.service
+        systemctl start docker.service
+        echo -e "${green}Docker${plain} 安装成功"
+    else
+        echo -e "${green}Docker${plain} 已安装"
+
+    fi
+
+    command -v docker-compose >/dev/null 2>&1
+    if [[ $? != 0 ]]; then
+        echo -e "正在安装 Docker Compose"
+        wget --no-check-certificate -O /usr/local/bin/docker-compose "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" >/dev/null 2>&1
+        if [[ $? != 0 ]]; then
+            echo -e "${red}下载Compose失败${plain}"
+            return 0
+        fi
+        chmod +x /usr/local/bin/docker-compose
+        echo -e "${green}Docker Compose${plain} 安装成功"
+    else
+        echo -e "${green}Docker Compose${plain} 已安装"
+    fi
+}
+
 main() {
     check_root
     clean_images
+    pre_check
+    install_docker
     echo -e "${Info} 开始设置 ShadowsocksR账号配置..."
     cd $WORKDIR || exit
     wget --no-check-certificate -O docker-compose.yml ${GITHUB_RAW_URL}/docker-compose.yml >/dev/null 2>&1
