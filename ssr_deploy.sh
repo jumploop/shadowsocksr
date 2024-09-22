@@ -327,9 +327,9 @@ install_docker() {
 
 main() {
     check_root
-    clean_images
     pre_check
     install_docker
+    clean_images
     echo -e "${Info} 开始设置 ShadowsocksR账号配置..."
     cd $WORKDIR || exit
     wget --no-check-certificate -O docker-compose.yml ${GITHUB_RAW_URL}/docker-compose.yml >/dev/null 2>&1
