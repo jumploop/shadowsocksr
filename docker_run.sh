@@ -9,10 +9,10 @@ plain='\033[0m'
 export PATH=$PATH:/usr/local/bin
 
 install_soft() {
-  (command -v yum >/dev/null 2>&1 && yum install "$*" -y) ||
-    (command -v apt >/dev/null 2>&1 && apt install "$*" -y) ||
-    (command -v pacman >/dev/null 2>&1 && pacman -Syu "$*") ||
-    (command -v apt-get >/dev/null 2>&1 && apt-get install "$*" -y)
+  (command -v yum >/dev/null 2>&1 && yum install "$@" -y) ||
+    (command -v apt >/dev/null 2>&1 && apt install "$@" -y) ||
+    (command -v pacman >/dev/null 2>&1 && pacman -Syu "$@") ||
+    (command -v apt-get >/dev/null 2>&1 && apt-get install "$@" -y)
 
   if [[ $? != 0 ]]; then
     echo -e "${red}安装基础软件失败，稍等会${plain}"
