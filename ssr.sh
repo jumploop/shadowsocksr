@@ -50,13 +50,14 @@ Check_python() {
       echo -e "${Error} Python3 也未安装，无法继续！" && exit 1
     else
       echo -e "${Info} Python3 已安装，继续..."
-      python="python3"
+      PY_VER="python3"
     fi
   else
     echo -e "${Info} Python 已安装，继续..."
-    python="python"
+    PY_VER="python"
   fi
 }
+
 check_sys() {
   if [[ -f /etc/redhat-release ]]; then
     release="centos"
@@ -269,7 +270,7 @@ Set_config_port() {
   while true; do
     echo -e "请输入要设置的ShadowsocksR账号 端口"
     local default_port
-    default_port=$(${python} -c 'import random;print(random.randint(1000, 65536))')
+    default_port=$(${PY_VER} -c 'import random;print(random.randint(1000, 65536))')
     read -r -e -p "(默认: $default_port):" ssr_port
     [[ -z "$ssr_port" ]] && ssr_port="$default_port"
 
@@ -1575,6 +1576,7 @@ menu_status() {
   fi
 }
 check_sys
+Check_python
 [[ ${release} != "debian" ]] && [[ ${release} != "ubuntu" ]] && [[ ${release} != "centos" ]] && echo -e "${Error} 本脚本不支持当前系统 ${release} !" && exit 1
 echo -e "  ShadowsocksR 一键管理脚本 ${Red_font_prefix}[v${sh_ver}]${Font_color_suffix}
   ---- Toyo | doub.io/ss-jc42 ----

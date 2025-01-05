@@ -23,11 +23,11 @@ Check_python() {
       echo -e "${Error} Python3 也未安装，无法继续！" && exit 1
     else
       echo -e "${Info} Python3 已安装，继续..."
-      python="python3"
+      PY_VER="python3"
     fi
   else
     echo -e "${Info} Python 已安装，继续..."
-    python="python"
+    PY_VER="python"
   fi
 }
 
@@ -35,7 +35,7 @@ Set_config_port() {
     while true; do
         echo -e "请输入要设置的ShadowsocksR账号 端口"
         local default_port
-        default_port=$(${python} -c 'import random;print(random.randint(1000, 65536))')
+        default_port=$(${PY_VER} -c 'import random;print(random.randint(1000, 65536))')
         read -r -e -p "(默认: $default_port):" ssr_port
         [[ -z "$ssr_port" ]] && ssr_port="$default_port"
 
@@ -331,7 +331,7 @@ install_docker() {
     command -v docker-compose >/dev/null 2>&1
     if [[ $? != 0 ]]; then
         echo -e "正在安装 Docker Compose"
-        wget --no-check-certificate -O /usr/local/bin/docker-compose ${DOCKER_COMPOSE_RELEASE}  >/dev/null 2>&1
+        wget --no-check-certificate -O /usr/local/bin/docker-compose "${DOCKER_COMPOSE_RELEASE}"  >/dev/null 2>&1
         if [[ $? != 0 ]]; then
             echo -e "${red}下载Compose失败${plain}"
             return 0
@@ -345,6 +345,7 @@ install_docker() {
 
 main() {
     check_root
+    Check_python
     pre_check
     install_docker
     clean_images
