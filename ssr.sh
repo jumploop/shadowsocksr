@@ -39,6 +39,24 @@ jq_version="1.7"
 check_root() {
   [[ $EUID != 0 ]] && echo -e "${Error} 当前账号非ROOT(或没有ROOT权限)，无法继续操作，请使用${Green_background_prefix} sudo su ${Font_color_suffix}来获取临时ROOT权限（执行后会提示输入当前账号的密码）。" && exit 1
 }
+
+# 检查 Python 是否存在
+Check_python() {
+  python_ver=$(python -h 2>/dev/null)
+  if [[ -z ${python_ver} ]]; then
+    echo -e "${Info} 没有安装Python，尝试使用Python3..."
+    python3_ver=$(python3 -h 2>/dev/null)
+    if [[ -z ${python3_ver} ]]; then
+      echo -e "${Error} Python3 也未安装，无法继续！" && exit 1
+    else
+      echo -e "${Info} Python3 已安装，继续..."
+      python="python3"
+    fi
+  else
+    echo -e "${Info} Python 已安装，继续..."
+    python="python"
+  fi
+}
 check_sys() {
   if [[ -f /etc/redhat-release ]]; then
     release="centos"
@@ -251,7 +269,7 @@ Set_config_port() {
   while true; do
     echo -e "请输入要设置的ShadowsocksR账号 端口"
     local default_port
-    default_port=$(python -c 'import random;print(random.randint(1000, 65536))')
+    default_port=$(${python} -c 'import random;print(random.randint(1000, 65536))')
     read -r -e -p "(默认: $default_port):" ssr_port
     [[ -z "$ssr_port" ]] && ssr_port="$default_port"
 
@@ -603,8 +621,7 @@ Centos_yum() {
     yum makecache
   fi
   yum update -y
-  yum install -y iptables-services
-  yum install -y bash-completion
+  yum install -y iptables-services bash-completion git
   if grep "7\..*" /etc/redhat-release | grep -i centos >/dev/null; then
     yum install -y vim unzip net-tools
   else
@@ -612,8 +629,8 @@ Centos_yum() {
   fi
 }
 Debian_apt() {
-  apt-get update
-  apt-get install -y bash-completion iptables-services
+  apt-get update -y
+  apt-get install -y bash-completion iptables-services git
   if grep "9\..*" /etc/issue >/dev/null; then
     apt-get install -y vim unzip net-tools
   else
