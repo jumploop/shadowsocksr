@@ -25,7 +25,7 @@ RUN mkdir -p $WORK  \
 
 WORKDIR $WORK/shadowsocksr-$BRANCH/shadowsocks
 
-RUN python3 fix_encrypt.py
+RUN bash fix_encrypt.sh
 
 EXPOSE $SERVER_PORT
 CMD ["python3", "server.py", "-c", "/etc/shadowsocksr/user-config.json", "a"]
