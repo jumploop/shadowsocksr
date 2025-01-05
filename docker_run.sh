@@ -2,11 +2,29 @@
 
 SERVER_PORT=51348
 
-red='\033[0;31m'
-green='\033[0;32m'
-yellow='\033[0;33m'
-plain='\033[0m'
+DOCKER_COMPOSE_RELEASE="https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)"
+Green_font_prefix="\033[32m" && Red_font_prefix="\033[31m" && Green_background_prefix="\033[42;37m" && Red_background_prefix="\033[41;37m" && Font_color_suffix="\033[0m"
+Info="${Green_font_prefix}[信息]${Font_color_suffix}"
+Error="${Red_font_prefix}[错误]${Font_color_suffix}"
 export PATH=$PATH:/usr/local/bin
+
+# 检查 Python 是否存在
+Check_python() {
+  python_ver=$(python -h 2>/dev/null)
+  if [[ -z ${python_ver} ]]; then
+    echo -e "${Info} 没有安装Python，尝试使用Python3..."
+    python3_ver=$(python3 -h 2>/dev/null)
+    if [[ -z ${python3_ver} ]]; then
+      echo -e "${Error} Python3 也未安装，无法继续！" && exit 1
+    else
+      echo -e "${Info} Python3 已安装，继续..."
+      python="python3"
+    fi
+  else
+    echo -e "${Info} Python 已安装，继续..."
+    python="python"
+  fi
+}
 
 install_soft() {
   (command -v yum >/dev/null 2>&1 && yum install "$@" -y) ||
@@ -15,7 +33,7 @@ install_soft() {
     (command -v apt-get >/dev/null 2>&1 && apt-get install "$@" -y)
 
   if [[ $? != 0 ]]; then
-    echo -e "${red}安装基础软件失败，稍等会${plain}"
+    echo -e "${Red_font_prefix}安装基础软件失败，稍等会${Font_color_suffix}"
     exit 1
   fi
 
@@ -34,28 +52,28 @@ install_docker() {
     echo -e "正在安装 Docker"
     bash <(curl -sL https://get.docker.com) >/dev/null 2>&1
     if [[ $? != 0 ]]; then
-      echo -e "${red}下载Docker失败${plain}"
+      echo -e "${Red_font_prefix}下载Docker失败${Font_color_suffix}"
       exit 1
     fi
     systemctl enable docker.service
     systemctl start docker.service
-    echo -e "${green}Docker${plain} 安装成功"
+    echo -e "${Green_font_prefix}Docker${Font_color_suffix} 安装成功"
   else
-    echo -e "${green}Docker${plain} 已安装"
+    echo -e "${Green_font_prefix}Docker${Font_color_suffix} 已安装"
 
   fi
   command -v docker-compose >/dev/null 2>&1
   if [[ $? != 0 ]]; then
     echo -e "正在安装 Docker Compose"
-    wget --no-check-certificate -O /usr/local/bin/docker-compose "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" >/dev/null 2>&1
+    wget --no-check-certificate -O /usr/local/bin/docker-compose ${DOCKER_COMPOSE_RELEASE} >/dev/null 2>&1
     if [[ $? != 0 ]]; then
-      echo -e "${red}下载Compose失败${plain}"
+      echo -e "${Red_font_prefix}下载Compose失败${Font_color_suffix}"
       return 0
     fi
     chmod +x /usr/local/bin/docker-compose
-    echo -e "${green}Docker Compose${plain} 安装成功"
+    echo -e "${Green_font_prefix}Docker Compose${Font_color_suffix} 安装成功"
   else
-    echo -e "${green}Docker Compose${plain} 已安装"
+    echo -e "${Green_font_prefix}Docker Compose${Font_color_suffix} 已安装"
   fi
 }
 
@@ -130,7 +148,7 @@ main() {
     if [ "$count" -eq 1 ]; then
       PORT=$SERVER_PORT
     else
-      PORT=$(python -c 'import random;print(random.randint(10000, 65536))')
+      PORT=$(${python} -c 'import random;print(random.randint(10000, 65536))')
     fi
     create_docker_container "$PORT"
     number=$((number + 1))
