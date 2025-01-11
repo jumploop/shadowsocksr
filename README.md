@@ -28,7 +28,7 @@ https://github.com/jinwyp/one_click_script
 
 一键容器部署
 ```shell
-wget -N --no-check-certificate https://raw.githubusercontent.com/jumploop/shadowsocksr/manyuser/ssr_deploy.sh && chmod +x ssr_deploy.sh && bash ssr_deploy.sh
+wget -N --no-check-certificate https://raw.githubusercontent.com/jumploop/shadowsocksr/manyuser/deploy_ssr.sh && chmod +x deploy_ssr.sh && bash deploy_ssr.sh
 
 ```
 
