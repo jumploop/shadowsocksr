@@ -8,23 +8,6 @@ Info="${Green_font_prefix}[信息]${Font_color_suffix}"
 Error="${Red_font_prefix}[错误]${Font_color_suffix}"
 export PATH=$PATH:/usr/local/bin
 
-# 检查 Python 是否存在
-Check_python() {
-  python_ver=$(python -h 2>/dev/null)
-  if [[ -z ${python_ver} ]]; then
-    echo -e "${Info} 没有安装Python，尝试使用Python3..."
-    python3_ver=$(python3 -h 2>/dev/null)
-    if [[ -z ${python3_ver} ]]; then
-      echo -e "${Error} Python3 也未安装，无法继续！" && exit 1
-    else
-      echo -e "${Info} Python3 已安装，继续..."
-      PY_VER="python3"
-    fi
-  else
-    echo -e "${Info} Python 已安装，继续..."
-    PY_VER="python"
-  fi
-}
 
 install_soft() {
   (command -v yum >/dev/null 2>&1 && yum install "$@" -y) ||
@@ -149,7 +132,7 @@ main() {
     if [ "$count" -eq 1 ]; then
       PORT=$SERVER_PORT
     else
-      PORT=$(${PY_VER} -c 'import random;print(random.randint(10000, 65536))')
+      PORT=$(python3 -c 'import random;print(random.randint(10000, 65536))')
     fi
     create_docker_container "$PORT"
     number=$((number + 1))
