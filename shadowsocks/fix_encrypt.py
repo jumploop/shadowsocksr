@@ -1,84 +1,122 @@
 #!/usr/bin/env python
-# -*- coding: utf-8
-from __future__ import absolute_import, division, print_function, with_statement
+# -*- coding: utf-8 -*-
 
 import logging
 import os
-import shlex
 import subprocess
-from threading import Timer
-from fileinput import input
+import configparser
+import shutil
 import encrypt_test
 
-logging.basicConfig(level=logging.INFO)
+# 配置日志记录
+logging.basicConfig(
+    level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 
-# https://blog.vinsonws.cn/2023/05/25/openssl-openssl3-%E5%A6%82%E4%BD%95%E5%BC%80%E5%90%AF-rc4-md5-%E6%94%AF%E6%8C%81/
-# 如果发现改完还是不行的话，尝试使用openssl version -d来确认修改的配置文件在该目录下
-#
-# Ref:
-# https://www.practicalnetworking.net/practical-tls/openssl-3-and-legacy-providers/
-
-
-def exe_command(cmdstr, timeout=1800, shell=False):
-    if shell:
-        command = cmdstr
-    else:
-        command = shlex.split(cmdstr)
-    process = subprocess.Popen(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell
-    )
-    timer = Timer(timeout, process.kill)
+def execute_command(command):
+    """执行 shell 命令并返回结果。"""
     try:
-        timer.start()
-        stdout, stderr = process.communicate()
-        retcode = process.poll()
-        result = (stdout + stderr).strip()
-        shellresult = (
-            result if isinstance(result, str) else str(result, encoding='utf-8')
+        process = subprocess.Popen(
+            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
         )
-        logging.info('execute shell [%s], shell result is\n%s', cmdstr, shellresult)
-        return retcode, shellresult
-    finally:
-        timer.cancel()
-
-
-def enable_rc4_legacy():
-    openssl_conf = "/etc/ssl/openssl.cnf"
-    try:
-        code, result = exe_command('openssl version -d')
-        if result.startswith('OPENSSLDIR'):
-            openssl_conf = os.path.join(result.split()[-1].strip('"'), 'openssl.cnf')
+        stdout, stderr = process.communicate()
+        output = (stdout + stderr).decode('utf-8').strip()
+        logging.info(
+            "执行命令: '%s', 返回码: %d, 输出: \n%s",
+            command,
+            process.returncode,
+            output,
+        )
+        return process.returncode, output
     except Exception as e:
-        logging.error('execute shell failed: %s', e)
-    logging.info('openssl config file %s', openssl_conf)
-    std = {
-        '[openssl_init]': 'providers = provider_sect',
-        '[provider_sect]': 'default = default_sect\nlegacy = legacy_sect',
-        '[default_sect]': 'activate = 1',
-        '[legacy_sect]': 'activate = 1',
-    }
-    # insert or append items to openssl.cnf file
-    for line in input(openssl_conf,inplace=True):
-        line=line.rstrip()
-        if line in std:
-            print(line)
-            print(std[line])
-            std.pop(line)
-        else:
-            print(line)
-    if std:
-        with open(openssl_conf, 'a') as f:
-            for k, v in std.items():
-                f.write('{0}\n'.format(k))
-                f.write('{0}\n'.format(v))
+        logging.error("执行命令 '%s' 失败: %s", command, e)
+        return -1, str(e)
+
+
+def get_openssl_info():
+    """获取 OpenSSL 版本和配置信息。"""
+    version = None
+    config_path = None
+
+    # 获取版本
+    returncode, output = execute_command('openssl version')
+    if returncode == 0:
+        version_string = output.split()[1]
+        version = tuple(map(int, version_string.split('.')[:2]))
+
+    # 获取配置路径
+    returncode, output = execute_command('openssl version -d')
+    if returncode == 0 and 'OPENSSLDIR' in output:
+        config_dir = output.split(':"')[1].split('"')[0]
+        for path in [
+            os.path.join(config_dir, 'openssl.cnf'),
+            os.path.join(config_dir, 'openssl.conf'),
+            "/etc/ssl/openssl.cnf",
+            "/usr/local/ssl/openssl.cnf",
+        ]:
+            if os.path.exists(path):
+                config_path = path
+                break
+
+    return version, config_path
+
+
+def enable_legacy_algorithms():
+    """启用 OpenSSL 遗留算法。"""
+    version, config_path = get_openssl_info()
+
+    if not version or not config_path:
+        logging.error("无法获取 OpenSSL 版本或配置信息")
+        return False
+
+    if version[0] < 3:
+        logging.info("OpenSSL 版本 %d.%d 无需启用遗留算法", version[0], version[1])
+        return True
+
+    config = configparser.ConfigParser()
+    try:
+        config.read(config_path)
+
+        # 配置相关段
+        for section, settings in {
+            'openssl_init': {'providers': 'provider_sect'},
+            'provider_sect': {'default': 'default_sect', 'legacy': 'legacy_sect'},
+            'default_sect': {'activate': '1'},
+            'legacy_sect': {'activate': '1', 'providers': 'legacy'},
+        }.items():
+            if section not in config:
+                config[section] = {}
+            config[section].update(settings)
+
+        # 备份和写入配置
+        backup_path = config_path + ".bak"
+        shutil.copy2(config_path, backup_path)
+        with open(config_path, 'w') as f:
+            config.write(f)
+
+        logging.info("已启用遗留算法")
+        return True
+
+    except Exception as e:
+        logging.error("修改 OpenSSL 配置文件失败: %s", e)
+        if os.path.exists(backup_path):
+            shutil.copy2(backup_path, config_path)
+            logging.info("已恢复备份")
+        return False
 
 
 def main():
+    """主函数。"""
     try:
         encrypt_test.main()
-    except Exception as e:
-        enable_rc4_legacy()
+    except Exception:
+        logging.error("加密测试失败")
+        if enable_legacy_algorithms():
+            logging.info("已启用遗留算法支持，请重试")
+            encrypt_test.main()
+        else:
+            logging.error("启用遗留算法支持失败")
 
 
 if __name__ == '__main__':

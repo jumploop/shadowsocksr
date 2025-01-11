@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 GITHUB_RAW_URL="https://raw.githubusercontent.com/jumploop/shadowsocksr/master"
-WORKDIR=/root/ssr
+WORKDIR=/opt/ssr
 [ ! -d $WORKDIR ] && mkdir -p $WORKDIR
 DOCKER_COMPOSE_RELEASE="https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)"
 Green_font_prefix="\033[32m" && Red_font_prefix="\033[31m" && Green_background_prefix="\033[42;37m" && Red_background_prefix="\033[41;37m" && Font_color_suffix="\033[0m"
@@ -13,29 +13,12 @@ green='\033[0;32m'
 plain='\033[0m'
 Separator_1="——————————————————————————————"
 
-# 检查 Python 是否存在
-Check_python() {
-  python_ver=$(python -h 2>/dev/null)
-  if [[ -z ${python_ver} ]]; then
-    echo -e "${Info} 没有安装Python，尝试使用Python3..."
-    python3_ver=$(python3 -h 2>/dev/null)
-    if [[ -z ${python3_ver} ]]; then
-      echo -e "${Error} Python3 也未安装，无法继续！" && exit 1
-    else
-      echo -e "${Info} Python3 已安装，继续..."
-      PY_VER="python3"
-    fi
-  else
-    echo -e "${Info} Python 已安装，继续..."
-    PY_VER="python"
-  fi
-}
 
 Set_config_port() {
     while true; do
         echo -e "请输入要设置的ShadowsocksR账号 端口"
         local default_port
-        default_port=$(${PY_VER} -c 'import random;print(random.randint(1000, 65536))')
+        default_port=$(python3 -c 'import random;print(random.randint(1000, 65536))')
         read -r -e -p "(默认: $default_port):" ssr_port
         [[ -z "$ssr_port" ]] && ssr_port="$default_port"
 
