@@ -5,7 +5,7 @@ ENV DNS_ADDR=8.8.8.8
 ENV DNS_ADDR_2=8.8.4.4
 
 ARG CONFIG_DIR=/etc/shadowsocksr
-ARG BRANCH=manyuser
+ARG BRANCH=dev
 ARG WORK=/root
 
 RUN mkdir -p $CONFIG_DIR

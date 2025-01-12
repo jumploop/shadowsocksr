@@ -36,6 +36,7 @@ Separator_1="——————————————————————�
 github="raw.githubusercontent.com/jumploop"
 jq_version="1.7"
 fix_ssh_script="${ssr_ss_file}/fix_encrypt.py"
+branch="dev"
 
 check_root() {
   [[ $EUID != 0 ]] && echo -e "${Error} 当前账号非ROOT(或没有ROOT权限)，无法继续操作，请使用${Green_background_prefix} sudo su ${Font_color_suffix}来获取临时ROOT权限（执行后会提示输入当前账号的密码）。" && exit 1
@@ -617,16 +618,16 @@ Download_SSR() {
   cd "/usr/local/" || exit
   #git config --global http.sslVerify false
   #env GIT_SSL_NO_VERIFY=true git clone -b manyuser https://github.com/ToyoDAdoubiBackup/shadowsocksr.git
-  if git clone -b manyuser https://github.com/jumploop/shadowsocksr.git; then
+  if git clone -b ${branch} https://github.com/jumploop/shadowsocksr.git; then
     [[ ! -e ${ssr_folder} ]] && echo -e "${Error} ShadowsocksR服务端 下载失败 !"
   else
-    wget -N --no-check-certificate "https://github.com/jumploop/shadowsocksr/archive/manyuser.zip"
-    [[ ! -e "manyuser.zip" ]] && echo -e "${Error} ShadowsocksR服务端 压缩包 下载失败 !" && rm -rf manyuser.zip && exit 1
-    unzip "manyuser.zip"
-    [[ ! -e "/usr/local/shadowsocksr-manyuser/" ]] && echo -e "${Error} ShadowsocksR服务端 解压失败 !" && rm -rf manyuser.zip && exit 1
-    mv "/usr/local/shadowsocksr-manyuser/" "/usr/local/shadowsocksr/"
-    [[ ! -e "/usr/local/shadowsocksr/" ]] && echo -e "${Error} ShadowsocksR服务端 重命名失败 !" && rm -rf manyuser.zip && rm -rf "/usr/local/shadowsocksr-manyuser/" && exit 1
-    rm -rf manyuser.zip
+    wget -N --no-check-certificate "https://github.com/jumploop/shadowsocksr/archive/${branch}.zip"
+    [[ ! -e "${branch}.zip" ]] && echo -e "${Error} ShadowsocksR服务端 压缩包 下载失败 !" && rm -rf ${branch}.zip && exit 1
+    unzip "${branch}.zip"
+    [[ ! -e "/usr/local/shadowsocksr-${branch}/" ]] && echo -e "${Error} ShadowsocksR服务端 解压失败 !" && rm -rf ${branch}.zip && exit 1
+    mv "/usr/local/shadowsocksr-${branch}/" "/usr/local/shadowsocksr/"
+    [[ ! -e "/usr/local/shadowsocksr/" ]] && echo -e "${Error} ShadowsocksR服务端 重命名失败 !" && rm -rf ${branch}.zip && rm -rf "/usr/local/shadowsocksr-${branch}/" && exit 1
+    rm -rf ${branch}.zip
   fi
   [[ -e ${config_folder} ]] && rm -rf ${config_folder}
   mkdir ${config_folder}
@@ -764,14 +765,14 @@ Update_SSR() {
   SSR_installation_status
   cd /tmp || exit
   # echo -e "因破娃暂停更新ShadowsocksR服务端，所以此功能临时禁用。"
-  wget -N --no-check-certificate "https://github.com/jumploop/shadowsocksr/archive/manyuser.zip"
-  [[ ! -e "manyuser.zip" ]] && echo -e "${Error} ShadowsocksR服务端 更新失败，请检查 !" && rm -rf manyuser.zip && exit 1
-  unzip "manyuser.zip"
+  wget -N --no-check-certificate "https://github.com/jumploop/shadowsocksr/archive/${branch}.zip"
+  [[ ! -e "${branch}.zip" ]] && echo -e "${Error} ShadowsocksR服务端 更新失败，请检查 !" && rm -rf ${branch}.zip && exit 1
+  unzip "${branch}.zip"
   ls -lah
-  [[ ! -e "/tmp/shadowsocksr-manyuser/" ]] && echo -e "${Error} ShadowsocksR服务端 解压失败 !" && rm -rf manyuser.zip && exit 1
-  cp -rf "/tmp/shadowsocksr-manyuser"/* "${ssr_folder}"
+  [[ ! -e "/tmp/shadowsocksr-${branch}/" ]] && echo -e "${Error} ShadowsocksR服务端 解压失败 !" && rm -rf ${branch}.zip && exit 1
+  cp -rf "/tmp/shadowsocksr-${branch}"/* "${ssr_folder}"
   echo -e "${Info} ShadowsocksR服务端 更新成功!"
-  rm -rf manyuser.zip && rm -rf "shadowsocksr-manyuser/"
+  rm -rf ${branch}.zip && rm -rf "shadowsocksr-${branch}/"
   JQ_install
   Restart_SSR
 }
@@ -1522,13 +1523,13 @@ Install_kernel_start_BBR() {
   bash <(curl -Lso- https://git.io/kernel.sh)
 }
 Update_Shell() {
-  sh_new_ver=$(wget --no-check-certificate -qO- -t1 -T3 "https://${github}/shadowsocksr/manyuser/ssr.sh" | grep 'sh_ver="' | awk -F "=" '{print $NF}' | sed 's/\"//g' | head -1) && sh_new_type="github"
+  sh_new_ver=$(wget --no-check-certificate -qO- -t1 -T3 "https://${github}/shadowsocksr/${branch}/ssr.sh" | grep 'sh_ver="' | awk -F "=" '{print $NF}' | sed 's/\"//g' | head -1) && sh_new_type="github"
   [[ -z ${sh_new_ver} ]] && echo -e "${Error} 无法链接到 Github !" && exit 0
   if [[ -e "/etc/init.d/ssr" ]]; then
     rm -rf /etc/init.d/ssr
     Service_SSR
   fi
-  wget -N --no-check-certificate "https://${github}/shadowsocksr/manyuser/ssr.sh" && chmod +x ssr.sh
+  wget -N --no-check-certificate "https://${github}/shadowsocksr/${branch}/ssr.sh" && chmod +x ssr.sh
   echo -e "脚本已更新为最新版本[ ${sh_new_ver} ] !(注意：因为更新方式为直接覆盖当前运行的脚本，所以可能下面会提示一些报错，无视即可)" && exit 0
 }
 # 显示 菜单状态

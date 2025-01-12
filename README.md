@@ -10,7 +10,7 @@ A fast tunnel proxy that helps you bypass firewalls.
 ------
 
 ```shell
-wget -N --no-check-certificate https://raw.githubusercontent.com/jumploop/shadowsocksr/manyuser/ssr.sh && chmod +x ssr.sh && bash ssr.sh
+wget -N --no-check-certificate https://raw.githubusercontent.com/jumploop/shadowsocksr/dev/ssr.sh && chmod +x ssr.sh && bash ssr.sh
 
 ```
 ssr.sh脚本集成了BBR加速功能
@@ -28,7 +28,7 @@ https://github.com/jinwyp/one_click_script
 
 一键容器部署
 ```shell
-wget -N --no-check-certificate https://raw.githubusercontent.com/jumploop/shadowsocksr/manyuser/deploy_ssr.sh && chmod +x deploy_ssr.sh && bash deploy_ssr.sh
+wget -N --no-check-certificate https://raw.githubusercontent.com/jumploop/shadowsocksr/dev/deploy_ssr.sh && chmod +x deploy_ssr.sh && bash deploy_ssr.sh
 
 ```
 

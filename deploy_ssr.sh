@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-GITHUB_RAW_URL="https://raw.githubusercontent.com/jumploop/shadowsocksr/master"
+branch="dev"
+GITHUB_RAW_URL="https://raw.githubusercontent.com/jumploop/shadowsocksr/${branch}"
 WORKDIR=/opt/ssr
 [ ! -d $WORKDIR ] && mkdir -p $WORKDIR
 DOCKER_COMPOSE_RELEASE="https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)"
