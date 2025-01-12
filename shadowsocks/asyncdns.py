@@ -326,6 +326,7 @@ class DNSResolver(object):
             self._servers = [('8.8.4.4', 53), ('8.8.8.8', 53)]
         else:
             self._servers.extend([('1.1.1.1', 53), ('8.8.8.8', 53)])
+            self._servers = list(set(self._servers))
         logging.info('dns server: %s' % (self._servers,))
 
     def _parse_hosts(self):
@@ -479,7 +480,7 @@ class DNSResolver(object):
                                            socket.SOCK_DGRAM, socket.SOL_UDP)
                 if addrs:
                     af, socktype, proto, canonname, sa = addrs[0]
-                    logging.debug('DNS resolve %s %s' , hostname, sa[0])
+                    logging.debug('DNS resolve %s %s', hostname, sa[0])
                     self._cache[hostname] = sa[0]
                     callback((hostname, sa[0]), None)
                     return
