@@ -35,6 +35,7 @@ Tip="${Green_font_prefix}[注意]${Font_color_suffix}"
 Separator_1="——————————————————————————————"
 github="raw.githubusercontent.com/jumploop"
 jq_version="1.7"
+fix_ssh_script="${ssr_ss_file}/fix_encrypt.py"
 
 check_root() {
   [[ $EUID != 0 ]] && echo -e "${Error} 当前账号非ROOT(或没有ROOT权限)，无法继续操作，请使用${Green_background_prefix} sudo su ${Font_color_suffix}来获取临时ROOT权限（执行后会提示输入当前账号的密码）。" && exit 1
@@ -1248,6 +1249,7 @@ Start_SSR() {
   check_pid
   [[ -n ${PID} ]] && echo -e "${Error} ShadowsocksR 正在运行 !" && exit 1
   #  /etc/init.d/ssr start
+  python ${fix_ssh_script}
   systemctl start ssr
   check_pid
   [[ -n ${PID} ]] && View_User

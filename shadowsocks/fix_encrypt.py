@@ -3,10 +3,10 @@
 
 import logging
 import os
+import re
 import subprocess
-import configparser
-import shutil
 import encrypt_test
+from fileinput import input
 
 # 配置日志记录
 logging.basicConfig(
@@ -48,7 +48,7 @@ def get_openssl_info():
     # 获取配置路径
     returncode, output = execute_command('openssl version -d')
     if returncode == 0 and 'OPENSSLDIR' in output:
-        config_dir = output.split(':"')[1].split('"')[0]
+        config_dir = output.split(':')[1].strip().split('"')[1]
         for path in [
             os.path.join(config_dir, 'openssl.cnf'),
             os.path.join(config_dir, 'openssl.conf'),
@@ -65,7 +65,7 @@ def get_openssl_info():
 def enable_legacy_algorithms():
     """启用 OpenSSL 遗留算法。"""
     version, config_path = get_openssl_info()
-
+    logging.info('version: %s, config_path: %s', version, config_path)
     if not version or not config_path:
         logging.error("无法获取 OpenSSL 版本或配置信息")
         return False
@@ -74,36 +74,26 @@ def enable_legacy_algorithms():
         logging.info("OpenSSL 版本 %d.%d 无需启用遗留算法", version[0], version[1])
         return True
 
-    config = configparser.ConfigParser()
-    try:
-        config.read(config_path)
-
-        # 配置相关段
-        for section, settings in {
-            'openssl_init': {'providers': 'provider_sect'},
-            'provider_sect': {'default': 'default_sect', 'legacy': 'legacy_sect'},
-            'default_sect': {'activate': '1'},
-            'legacy_sect': {'activate': '1', 'providers': 'legacy'},
-        }.items():
-            if section not in config:
-                config[section] = {}
-            config[section].update(settings)
-
-        # 备份和写入配置
-        backup_path = config_path + ".bak"
-        shutil.copy2(config_path, backup_path)
-        with open(config_path, 'w') as f:
-            config.write(f)
-
-        logging.info("已启用遗留算法")
-        return True
-
-    except Exception as e:
-        logging.error("修改 OpenSSL 配置文件失败: %s", e)
-        if os.path.exists(backup_path):
-            shutil.copy2(backup_path, config_path)
-            logging.info("已恢复备份")
-        return False
+    # 备份和写入配置
+    for line in input(config_path, inplace=True, backup=".bak"):
+        line = line.strip()
+        if re.match(r'#*\s*providers = provider_sect', line):
+            print('providers = provider_sect')
+        elif re.match(r'#*\s*\[provider_sect\]', line):
+            print('[provider_sect]')
+        elif re.match(r'#*\s*default = default_sect', line):
+            print('default = default_sect')
+            print('legacy = legacy_sect')
+        elif re.match(r'#*\s*\[default_sect\]', line):
+            print('[default_sect]')
+        elif re.match(r'#*\s*activate = 1', line):
+            print('activate = 1')
+            print('[legacy_sect]')
+            print('activate = 1')
+        else:
+            print(line)
+    logging.info("已启用遗留算法")
+    return True
 
 
 def main():
@@ -112,9 +102,10 @@ def main():
         encrypt_test.main()
     except Exception:
         logging.error("加密测试失败")
-        if enable_legacy_algorithms():
+        enable_legacy_algorithms()
+        _, providers_output = execute_command('openssl list -providers')
+        if 'legacy' in providers_output and 'default' in providers_output:
             logging.info("已启用遗留算法支持，请重试")
-            encrypt_test.main()
         else:
             logging.error("启用遗留算法支持失败")
 
