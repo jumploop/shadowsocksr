@@ -582,28 +582,18 @@ Write_configuration_many() {
 EOF
 }
 Check_python() {
+  [[ ! -e /usr/bin/python ]] && ln -s /usr/bin/python3 /usr/bin/python
   python_ver=$(python -h)
   if [[ -z ${python_ver} ]]; then
-    echo -e "${Info} 没有安装Python，开始安装..."
+    echo -e "${Info} 没有安装Python3，开始安装..."
     if [[ ${release} == "centos" ]]; then
-      yum install -y python
+      yum install -y python3
     else
-      apt-get install -y python
+      apt-get install -y python3
     fi
   fi
 }
 Centos_yum() {
-  if yum clean all && yum makecache; then
-    echo "Centos yum available"
-  else
-    echo "Centos yum not available,config other yum"
-    wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
-    yum clean all
-    yum makecache
-    yum -y install epel-release
-    yum clean all
-    yum makecache
-  fi
   yum update -y
   yum install -y iptables-services bash-completion git
   if grep "7\..*" /etc/redhat-release | grep -i centos >/dev/null; then
@@ -613,7 +603,7 @@ Centos_yum() {
   fi
 }
 Debian_apt() {
-  apt-get update -y
+  apt-get update
   apt-get install -y bash-completion iptables-services git
   if grep "9\..*" /etc/issue >/dev/null; then
     apt-get install -y vim unzip net-tools
@@ -839,7 +829,7 @@ Install_Libsodium() {
   fi
   Check_Libsodium_ver
   if [[ ${release} == "centos" ]]; then
-    yum update
+    yum update -y
     echo -e "${Info} 安装依赖..."
     yum -y groupinstall "Development Tools"
     echo -e "${Info} 下载..."
